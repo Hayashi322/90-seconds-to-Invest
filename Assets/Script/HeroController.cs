@@ -7,18 +7,28 @@ using UnityEngine;
 public class HeroController : MonoBehaviour
 {
     [SerializeField] private WaypointController waypointController;
-    [SerializeField] private GameObject currentNode;
+    [SerializeField] private GameObject startWaypoint; // จุดเริ่มต้นที่กำหนด
     [SerializeField] private GameObject targetNode;
     [Space(20)]
     [SerializeField] private float moveSpeed = 1f;
-    [SerializeField] private float reachOffset = 0.05f; // ปรับให้หยุดได้แม่นยำขึ้น
+    [SerializeField] private float reachOffset = 0.05f;
     private List<GameObject> pathWay = null;
     private int _currentPathIndex = 0;
+    private GameObject currentNode; // ใช้เก็บ Waypoint ปัจจุบัน
     void Start()
     {
-        StartTravel();
+        if (startWaypoint != null)
+        {
+            currentNode = startWaypoint;
+            transform.position = currentNode.transform.position; // ให้ตัวละครเริ่มต้นที่ตำแหน่งของ Waypoint
+        }
+        else
+        {
+            currentNode = FindClosestWaypoint();
+            transform.position = currentNode.transform.position;
+        }
     }
-    void FixedUpdate() // ใช้ FixedUpdate เพื่อให้เดินลื่นขึ้น
+    void FixedUpdate()
     {
         PathTraversal();
     }
@@ -44,69 +54,82 @@ public class HeroController : MonoBehaviour
         Gizmos.DrawLine(endPos, endPos + right);
         Gizmos.DrawLine(endPos, endPos + left);
     }
-    public void SetStartNode(int nodeIdx)
+    public void SetDestinationByClick(GameObject targetWaypoint)
     {
-        List<GraphNode> nodes = waypointController.GetWaypointGraph().GetAllNodes();
-        if (nodeIdx >= 0 && nodeIdx < nodes.Count && nodes[nodeIdx] != null)
-        {
-            currentNode = nodes[nodeIdx].GameObjectNode;
-        }
-        Debug.Log("SetStartNode: " + nodeIdx);
+        targetNode = targetWaypoint;
+        StartTravel();
     }
-    public void SetTargetNode(int nodeIdx)
+    private void StartTravel()
     {
-        List<GraphNode> nodes = waypointController.GetWaypointGraph().GetAllNodes();
-        if (nodeIdx >= 0 && nodeIdx < nodes.Count && nodes[nodeIdx] != null)
+        if (currentNode == null || targetNode == null)
         {
-            targetNode = nodes[nodeIdx].GameObjectNode;
-        }
-        Debug.Log("SetTargetNode: " + nodeIdx);
-    }
-    public void StartTravel()
-    {
-        _currentPathIndex = 0;
-        transform.position = currentNode.transform.position;
-        if (currentNode == targetNode)
-        {
-            Debug.LogError("Target is the same as Start!");
+            Debug.LogError("Waypoint ไม่ถูกต้อง!");
             return;
         }
-        // ค้นหาเส้นทางโดยใช้ A*
+        if (currentNode == targetNode)
+        {
+            Debug.Log("อยู่ที่เป้าหมายแล้ว ไม่ต้องเดิน");
+            return;
+        }
+        // คำนวณเส้นทาง A*
         pathWay = AStar.FindPath(waypointController.GetWaypointGraph(), currentNode, targetNode);
-        if (pathWay != null)
+        if (pathWay != null && pathWay.Count > 0)
         {
             Debug.Log("Path found:");
             foreach (var gameObject in pathWay)
             {
                 Debug.Log(gameObject.name);
             }
+            _currentPathIndex = 0; // รีเซ็ตให้เริ่มเดินจากจุดแรก
             waypointController.EnablePathGizmos(false);
         }
         else
         {
-            Debug.LogError("AStar can not find path!");
+            Debug.LogError("AStar ไม่สามารถหาเส้นทางได้!");
+            pathWay = null; // ป้องกันการเดินผิดเส้นทาง
         }
     }
-    public void ClearPathway()
+    private GameObject FindClosestWaypoint()
     {
-        pathWay = null;
-        waypointController.EnablePathGizmos(true);
+        List<GraphNode> nodes = waypointController.GetWaypointGraph().GetAllNodes();
+        GameObject closestNode = null;
+        float closestDistance = float.MaxValue;
+        foreach (var node in nodes)
+        {
+            float distance = Vector2.Distance(transform.position, node.GameObjectNode.transform.position);
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closestNode = node.GameObjectNode;
+            }
+        }
+        return closestNode;
     }
     private void PathTraversal()
     {
         if (pathWay == null || pathWay.Count == 0) return;
+        // ตรวจสอบว่าดัชนี `_currentPathIndex` อยู่ในขอบเขตที่ถูกต้อง
+        if (_currentPathIndex < 0 || _currentPathIndex >= pathWay.Count)
+        {
+            Debug.LogError("Path Index เกินขอบเขต! _currentPathIndex: " + _currentPathIndex);
+            pathWay = null; // หยุดการเดินถ้าเกิดข้อผิดพลาด
+            return;
+        }
         GameObject nextNode = pathWay[_currentPathIndex];
         Vector2 nextPosition = nextNode.transform.position;
-        // เคลื่อนที่ไปยัง node ถัดไป
+        // เดินตรงไปยัง Waypoint เท่านั้น (เกาะเส้นทาง)
         transform.position = Vector2.MoveTowards(transform.position, nextPosition, moveSpeed * Time.deltaTime);
-        // เช็คว่าเดินถึง node แล้วหรือไม่
+        // ถ้าถึงจุดหมาย ให้ไปยัง Waypoint ถัดไป
         if (Vector2.Distance(transform.position, nextPosition) < reachOffset)
         {
             _currentPathIndex++;
             if (_currentPathIndex >= pathWay.Count)
             {
+                // ถึงจุดสุดท้ายของเส้นทางแล้ว
                 pathWay = null;
-                Debug.Log("Arrived at target node!");
+                currentNode = targetNode; // อัปเดตจุดเริ่มต้นใหม่
+                targetNode = null; // รอให้เลือกจุดหมายใหม่
+                Debug.Log("ถึงเป้าหมายแล้ว! จุดใหม่: " + currentNode.name);
             }
         }
     }

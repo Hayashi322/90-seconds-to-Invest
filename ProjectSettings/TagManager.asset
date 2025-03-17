@@ -3,7 +3,16 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 3
-  tags: []
+  tags:
+  - Finansia
+  - GoldShop
+  - RealEstate
+  - Lottery
+  - TaxOffice
+  - Police
+  - Casino
+  - Undefined
+  - Bank
   layers:
   - Default
   - TransparentFX
@@ -43,6 +52,9 @@ TagManager:
     locked: 0
   - name: BG
     uniqueID: 226005539
+    locked: 0
+  - name: Map
+    uniqueID: 2396789207
     locked: 0
   - name: Player
     uniqueID: 287171231
