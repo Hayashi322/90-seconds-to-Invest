@@ -4,24 +4,14 @@ using UnityEngine;
 public class OpenCanvas : MonoBehaviour
 {
     public CanvasGroup[] canvas;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
     
+   
     public void openCanvas1()
     {
-        Debug.Log("opencanvas");
-        canvas[0].alpha = 1;
-        canvas[0].blocksRaycasts = true;
-        canvas[0].interactable = true;
+        Debug.Log("opencanvas");              
+        canvas[0].alpha = 1;                   //ทำให้มองเห็นcanvas
+        canvas[0].blocksRaycasts = true;       //ทำให้ยิงเลแคสได้ ไม่ทะลุcanvas
+        canvas[0].interactable = true;         //ทำให้สามารถกดปุ่มในcanvasได้
     }
     public void openCanvas2()
     {
@@ -72,9 +62,14 @@ public class OpenCanvas : MonoBehaviour
         canvas[7].blocksRaycasts = true;
         canvas[7].interactable = true;
     }
+
+
+   
+    ///////////////////////////////////////////////////////
+   
     public void closeCanvas() 
     {
-        for (int i = 0; i < canvas.Length; i++) 
+        for (int i = 0; i < canvas.Length; i++)  //ปิดหน้าต่างทั้งหมด
         {
         canvas[i].alpha = 0;
         canvas[i].blocksRaycasts = false;
