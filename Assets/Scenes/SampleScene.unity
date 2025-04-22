@@ -1085,7 +1085,7 @@ GameObject:
   - component: {fileID: 230638076}
   - component: {fileID: 230638075}
   m_Layer: 0
-  m_Name: Square (5)
+  m_Name: taxOfficeWaypoint
   m_TagString: TaxOffice
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1100,8 +1100,8 @@ Transform:
   m_GameObject: {fileID: 230638073}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.5514, y: -2.8584, z: 0.04695071}
-  m_LocalScale: {x: 2.0243998, y: 2.5198536, z: 1}
+  m_LocalPosition: {x: -2.48, y: -3.4618, z: 0.04695071}
+  m_LocalScale: {x: 0.23251303, y: 0.33651128, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1395215398}
@@ -1141,17 +1141,17 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0.12430811, y: -0.028630733}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    oldSize: {x: 8.61, y: 6.12}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 9.038596, y: 6.6688004}
   m_EdgeRadius: 0
 --- !u!212 &230638076
 SpriteRenderer:
@@ -1197,8 +1197,8 @@ SpriteRenderer:
   m_SortingLayerID: -1898178089
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.5525499, g: 0.21960782, b: 0.6039216, a: 1}
+  m_Sprite: {fileID: -1413713103915997892, guid: 9c0d79bbaa2fa4e41b1350bfb373d248, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -1220,7 +1220,7 @@ GameObject:
   - component: {fileID: 267796261}
   - component: {fileID: 267796260}
   m_Layer: 0
-  m_Name: Square (6)
+  m_Name: lotteryWaypoint
   m_TagString: Lottery
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1235,8 +1235,8 @@ Transform:
   m_GameObject: {fileID: 267796258}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -5.6534, y: -1.2724, z: 0.04695071}
-  m_LocalScale: {x: 1.0360575, y: 1.0752215, z: 1}
+  m_LocalPosition: {x: -5.82, y: -1.15, z: 0.04695071}
+  m_LocalScale: {x: 0.2, y: 0.2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1933301517}
@@ -1276,17 +1276,17 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0.09634209, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
-    newSize: {x: 1, y: 1}
+    oldSize: {x: 8.46, y: 6.95}
+    newSize: {x: 8.46, y: 6.95}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 8.707533, y: 7.166029}
   m_EdgeRadius: 0
 --- !u!212 &267796261
 SpriteRenderer:
@@ -1332,12 +1332,12 @@ SpriteRenderer:
   m_SortingLayerID: -1898178089
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.861289, g: 0.8867924, b: 0.24679601, a: 1}
+  m_Sprite: {fileID: 2675041239705748806, guid: 9834e7b300907ae43aeb88ae1f64646d, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 8.46, y: 6.95}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -1708,7 +1708,7 @@ GameObject:
   - component: {fileID: 372622077}
   - component: {fileID: 372622079}
   m_Layer: 0
-  m_Name: Square (1)
+  m_Name: goldShopWaypoint
   m_TagString: GoldShop
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1723,8 +1723,8 @@ Transform:
   m_GameObject: {fileID: 372622075}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 4.83, y: 2.2993, z: 0.04695071}
-  m_LocalScale: {x: 1.4037659, y: 0.9362171, z: 1}
+  m_LocalPosition: {x: 4.9, y: 2.56, z: 0.04695071}
+  m_LocalScale: {x: 0.25, y: 0.25, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 435067401}
@@ -1764,17 +1764,17 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: -0.0619936, y: -0.0309968}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    oldSize: {x: 8.72, y: 7.45}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 9.431162, y: 8.377269}
   m_EdgeRadius: 0
 --- !u!212 &372622078
 SpriteRenderer:
@@ -1820,8 +1820,8 @@ SpriteRenderer:
   m_SortingLayerID: -1898178089
   m_SortingLayer: 2
   m_SortingOrder: 2
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.21929511, g: 0.6037736, b: 0.22517407, a: 1}
+  m_Sprite: {fileID: 2521059873237847454, guid: 4bec04f4d2f2a2b4ca27d269c92d61bc, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -2569,7 +2569,7 @@ GameObject:
   - component: {fileID: 478004834}
   - component: {fileID: 478004833}
   m_Layer: 0
-  m_Name: Square (7)
+  m_Name: policeWaypoint
   m_TagString: Police
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2584,8 +2584,8 @@ Transform:
   m_GameObject: {fileID: 478004831}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.8702, y: 2.0444, z: 0.04695071}
-  m_LocalScale: {x: 1.2640917, y: 0.9231505, z: 1}
+  m_LocalPosition: {x: -3.99, y: 2.43, z: 0.04695071}
+  m_LocalScale: {x: 0.3, y: 0.3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 521032257}
@@ -2625,17 +2625,17 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: -0.12845874, y: 0.12845957}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    oldSize: {x: 4.74, y: 6.21}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 5.4960647, y: 6.523735}
   m_EdgeRadius: 0
 --- !u!212 &478004834
 SpriteRenderer:
@@ -2681,8 +2681,8 @@ SpriteRenderer:
   m_SortingLayerID: -1898178089
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.5188679, g: 0.43886364, b: 0.369571, a: 1}
+  m_Sprite: {fileID: 2728945531603991871, guid: 85a647887fa90fe4aba412c7b668cc37, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -3800,7 +3800,7 @@ GameObject:
   - component: {fileID: 763275409}
   - component: {fileID: 763275408}
   m_Layer: 0
-  m_Name: Square (4)
+  m_Name: bankWaypoint
   m_TagString: Bank
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3815,8 +3815,8 @@ Transform:
   m_GameObject: {fileID: 763275406}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.63, y: -3.2, z: 0.04695071}
-  m_LocalScale: {x: 1.8216501, y: 1.5567143, z: 1}
+  m_LocalPosition: {x: 1.18, y: -2.4, z: 0.04695071}
+  m_LocalScale: {x: 0.3, y: 0.3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 820318708}
@@ -3856,17 +3856,17 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: -0.12128544, y: -0.20214272}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    oldSize: {x: 8.07, y: 8.51}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 9.004845, y: 8.357986}
   m_EdgeRadius: 0
 --- !u!212 &763275409
 SpriteRenderer:
@@ -3912,8 +3912,8 @@ SpriteRenderer:
   m_SortingLayerID: -1898178089
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.21960782, g: 0.5941376, b: 0.6039216, a: 1}
+  m_Sprite: {fileID: -1685015043152139212, guid: f7211bf0fe3bbd941a03c03e7c893660, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -4236,7 +4236,7 @@ SpriteRenderer:
   m_SortingLayerID: 226005539
   m_SortingLayer: 1
   m_SortingOrder: 0
-  m_Sprite: {fileID: -2967073872034082204, guid: 544b1647db8b60f418e3cf28fd7673ec, type: 3}
+  m_Sprite: {fileID: 4804446361586417100, guid: b9b94dc4a9a01d443b47b2aacbfb358b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -5617,7 +5617,7 @@ GameObject:
   - component: {fileID: 1322725997}
   - component: {fileID: 1322725999}
   m_Layer: 0
-  m_Name: Square
+  m_Name: finansiaWaypoint
   m_TagString: Finansia
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5632,8 +5632,8 @@ Transform:
   m_GameObject: {fileID: 1322725995}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.923889, y: 2.52471, z: 0.04695071}
-  m_LocalScale: {x: 1.4037659, y: 1.6376022, z: 1}
+  m_LocalPosition: {x: 1.92, y: 2.89, z: 0.04695071}
+  m_LocalScale: {x: 0.3, y: 0.3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 778035571}
@@ -5673,17 +5673,17 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: -0.12915397, y: -0.0000009536743}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    oldSize: {x: 5.6, y: 8.77}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 6.217815, y: 9.059198}
   m_EdgeRadius: 0
 --- !u!212 &1322725998
 SpriteRenderer:
@@ -5729,8 +5729,8 @@ SpriteRenderer:
   m_SortingLayerID: -1898178089
   m_SortingLayer: 2
   m_SortingOrder: 2
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.8113208, g: 0.4554112, b: 0.4554112, a: 1}
+  m_Sprite: {fileID: 6041240624108988605, guid: e4bd05f821ab3ec4b93b8cc20913ae47, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -6654,7 +6654,7 @@ GameObject:
   - component: {fileID: 1598282819}
   - component: {fileID: 1598282818}
   m_Layer: 0
-  m_Name: Square (3)
+  m_Name: realEstateWaypoint
   m_TagString: RealEstate
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6669,8 +6669,8 @@ Transform:
   m_GameObject: {fileID: 1598282816}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 5.59, y: -3.6, z: 0.04695071}
-  m_LocalScale: {x: 1.8216501, y: 0.97379845, z: 1}
+  m_LocalPosition: {x: 5.6347, y: -3.3095, z: 0.04695071}
+  m_LocalScale: {x: 0.24785966, y: 0.22484317, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 173932274}
@@ -6710,17 +6710,17 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: -0.19573212, y: -0.053940296}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    oldSize: {x: 8.57, y: 7.73}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 9.220766, y: 8.875567}
   m_EdgeRadius: 0
 --- !u!212 &1598282819
 SpriteRenderer:
@@ -6766,8 +6766,8 @@ SpriteRenderer:
   m_SortingLayerID: -1898178089
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.6039216, g: 0.21960782, b: 0.41824955, a: 1}
+  m_Sprite: {fileID: -1272677867225930765, guid: bd9c657308d89df4b9e088e2eeb4a41f, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -6789,7 +6789,7 @@ GameObject:
   - component: {fileID: 1634924456}
   - component: {fileID: 1634924455}
   m_Layer: 0
-  m_Name: Square (2)
+  m_Name: casinoWaypoint
   m_TagString: Casino
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6803,9 +6803,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1634924453}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 9.3926, y: -0.6324, z: 0.04695071}
-  m_LocalScale: {x: 1.0865793, y: 1.5313704, z: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 9.33, y: -0.6324, z: 0.04695071}
+  m_LocalScale: {x: 0.25, y: 0.3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 844028197}
@@ -6845,17 +6845,17 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: -0.2910862, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    oldSize: {x: 8.16, y: 5.81}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 8.568211, y: 6.013134}
   m_EdgeRadius: 0
 --- !u!212 &1634924456
 SpriteRenderer:
@@ -6901,8 +6901,8 @@ SpriteRenderer:
   m_SortingLayerID: -1898178089
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.6039216, g: 0.55258757, b: 0.21960782, a: 1}
+  m_Sprite: {fileID: 4210748570685164555, guid: bc3b49a3616a66344834f7ee76fae572, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
