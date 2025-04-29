@@ -3,9 +3,17 @@ using System.Collections;
 using System.Collections.Generic;
 using Astar;
 using Graph;
+using Unity.VisualScripting;
 using UnityEngine;
 public class HeroController : MonoBehaviour
 {
+    [SerializeField] private GameObject MapCanvas;
+    private int canvasNumber;
+
+
+    /// //////////////////////////////////
+  
+
     [SerializeField] private WaypointController waypointController;
     [SerializeField] private GameObject startWaypoint; // จุดเริ่มต้นที่กำหนด
     [SerializeField] private GameObject targetNode;
@@ -15,8 +23,11 @@ public class HeroController : MonoBehaviour
     private List<GameObject> pathWay = null;
     private int _currentPathIndex = 0;
     private GameObject currentNode; // ใช้เก็บ Waypoint ปัจจุบัน
+
+
     void Start()
     {
+       
         if (startWaypoint != null)
         {
             currentNode = startWaypoint;
@@ -129,8 +140,48 @@ public class HeroController : MonoBehaviour
                 pathWay = null;
                 currentNode = targetNode; // อัปเดตจุดเริ่มต้นใหม่
                 targetNode = null; // รอให้เลือกจุดหมายใหม่
+                setCanvasArray();
+                MapCanvas.GetComponent<OpenCanvas>().openCanvas(canvasNumber); //เปิดหน้า Ui
                 Debug.Log("ถึงเป้าหมายแล้ว! จุดใหม่: " + currentNode.name);
             }
         }
+    }
+    private void setCanvasArray()
+    {
+        int name = (Convert.ToInt32(currentNode.name));
+        if (name == 01)
+        {
+            canvasNumber = 0;
+        }
+        else if (name == 02)
+        {
+            canvasNumber = 1;
+        }
+        else if (name == 05)
+        {
+            canvasNumber = 2;
+        }
+        else if (name == 07)
+        {
+            canvasNumber = 3;
+        }
+        else if (name == 09)
+        {
+            canvasNumber = 4;
+        }
+        else if (name == 12)
+        {
+            canvasNumber = 5;
+        }
+        else if (name == 16)
+        {
+            canvasNumber = 6;
+        }
+        else if (name == 18)
+        {
+            canvasNumber = 7;
+        }
+        else canvasNumber = -1;
+
     }
 }
