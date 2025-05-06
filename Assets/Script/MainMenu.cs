@@ -1,16 +1,28 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro; // เพิ่มสำหรับ TextMeshPro
 
 public class MainMenu : MonoBehaviour
 {
+    public TMP_InputField nameInputField;
+
     public void PlayGame()
     {
-        SceneManager.LoadScene("GameScene"); // เปลี่ยนชื่อซีนตามที่เธอใช้จริง
+        string inputName = nameInputField.text;
+
+        if (string.IsNullOrEmpty(inputName))
+        {
+            Debug.Log("กรุณาใส่ชื่อก่อนเริ่มเกม");
+            return;
+        }
+
+        PlayerData.Instance.playerName = inputName;
+        SceneManager.LoadScene("LobbyScene");
     }
 
     public void OpenSettings()
     {
-        SceneManager.LoadScene("SettingsScene"); // หรือใช้ Panel ก็ได้ ถ้าอยู่ในหน้าเดียวกัน
+        SceneManager.LoadScene("SettingsScene");
     }
 
     public void QuitGame()
