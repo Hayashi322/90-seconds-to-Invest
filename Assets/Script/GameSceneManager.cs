@@ -1,33 +1,43 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class GameSceneManager : MonoBehaviour
 {
-    public TMP_Text playerNameText;
-    public Image characterImage;
     public Sprite[] characterSprites;
+    public Image uiCharacterImage;
+    public SpriteRenderer playerRenderer;
+    public Transform playerTransform;
+
+    public float targetSize = 1.5f; // ความสูงเป้าหมาย (world unit)
 
     void Start()
     {
         if (PlayerData.Instance == null)
         {
-            Debug.LogError("PlayerData.Instance ไม่ถูกสร้าง ตรวจสอบว่าเริ่มจาก MainMenu หรือไม่");
+            Debug.LogError("PlayerData.Instance ไม่พบ (ควรเริ่มจากหน้าเมนู)");
             return;
         }
 
-        // แสดงชื่อผู้เล่น
-        playerNameText.text = PlayerData.Instance.playerName;
-
-        // แสดงตัวละครตาม index ที่เลือกไว้
         int index = PlayerData.Instance.selectedCharacterIndex;
+
         if (index >= 0 && index < characterSprites.Length)
         {
-            characterImage.sprite = characterSprites[index];
+            // UI
+            uiCharacterImage.sprite = characterSprites[index];
+
+            // Player
+            Sprite selectedSprite = characterSprites[index];
+            playerRenderer.sprite = selectedSprite;
+
+            // ปรับขนาดให้สูง = targetSize
+            float currentHeight = selectedSprite.bounds.size.y;
+            float scaleFactor = targetSize / currentHeight;
+            playerTransform.localScale = Vector3.one * scaleFactor;
         }
         else
         {
-            Debug.LogWarning("Index ตัวละครไม่ถูกต้อง");
+            Debug.LogWarning("Index ตัวละครไม่ถูกต้อง: " + index);
         }
     }
 }
+
