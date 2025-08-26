@@ -25,6 +25,8 @@ public class WaypointController : MonoBehaviour
 
     [SerializeField] private bool flagDrawGizmo = true;
 
+   
+
     void Awake()
     {
         // Singleton graph
@@ -32,6 +34,8 @@ public class WaypointController : MonoBehaviour
         {
             waypoint_graph = BuildGraph();
         }
+        
+       
     }
 
     private void OnDrawGizmos()

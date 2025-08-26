@@ -7,6 +7,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 public class HeroController : MonoBehaviour
 {
+    public bool uiIsOpen = false; //เช็คว่าหน้าต่างเปิดไหม
     [SerializeField] private GameObject MapCanvas;
     private int canvasNumber;
 
@@ -120,7 +121,7 @@ public class HeroController : MonoBehaviour
     {
         if (pathWay == null || pathWay.Count == 0) return;
         // ตรวจสอบว่าดัชนี `_currentPathIndex` อยู่ในขอบเขตที่ถูกต้อง
-        if (_currentPathIndex < 0 || _currentPathIndex >= pathWay.Count)
+        if (_currentPathIndex < 0 || _currentPathIndex >= pathWay.Count|| uiIsOpen == true) //เช็คว่าหน่าต่าง ui เปิดอยู่ไหม
         {
             Debug.LogError("Path Index เกินขอบเขต! _currentPathIndex: " + _currentPathIndex);
             pathWay = null; // หยุดการเดินถ้าเกิดข้อผิดพลาด

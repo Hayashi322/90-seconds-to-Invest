@@ -4,13 +4,21 @@ using UnityEngine;
 public class OpenCanvas : MonoBehaviour
 {
     public CanvasGroup[] canvas;
-    
-   public void openCanvas(int number)
+    public HeroController controller;
+    GameObject go = GameObject.FindWithTag("Player");
+   
+    private void Awake()
+    {
+       
+        controller = go.GetComponent<HeroController>(); //ดึงตัวแปลว่า ui เปิดอยู่รึปล่าว
+    }
+    public void openCanvas(int number)
     {
         Debug.Log("opencanvas");
         canvas[number].alpha = 1;
         canvas[number].blocksRaycasts = true;
         canvas[number].interactable = true;
+        controller.uiIsOpen = true;
     }
 
     ///////////////////////////////////////////////////////
@@ -23,6 +31,7 @@ public class OpenCanvas : MonoBehaviour
             canvas[i].blocksRaycasts = false;
             canvas[i].interactable = false;
         }
+        controller.uiIsOpen = false;
 
     }
     /* public void openCanvas1()
