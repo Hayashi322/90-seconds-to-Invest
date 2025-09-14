@@ -1,70 +1,71 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class LocationClickManager : MonoBehaviour
 {
-    [SerializeField] private HeroController heroController;
+    /*[SerializeField] private HeroController heroController;
 
-    [Header("ลาก Waypoint ของสถานที่ลงมาใน Inspector")]
-    [SerializeField] private GameObject finansiaWaypoint;
-    [SerializeField] private GameObject goldShopWaypoint;
-    [SerializeField] private GameObject bankWaypoint;
-    [SerializeField] private GameObject realEstateWaypoint;
-    [SerializeField] private GameObject lotteryWaypoint;
-    [SerializeField] private GameObject taxOfficeWaypoint;
-    [SerializeField] private GameObject policeWaypoint;
-    [SerializeField] private GameObject casinoWaypoint;
+    [Header("Tag → Waypoint")]
+    [SerializeField] private List<TagToWaypoint> mappings = new List<TagToWaypoint>();
+
+    [Header("Click Settings")]
+    [SerializeField] private LayerMask clickableMask = ~0; // เลเยอร์ที่อนุญาตให้คลิกได้
+    private Camera cam;
+
+    [System.Serializable]
+    public class TagToWaypoint
+    {
+        public string tag;
+        public GameObject waypoint;
+    }
+
+    private void Awake()
+    {
+        cam = Camera.main;
+    }
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0)) // คลิกซ้าย
-        {
+        if (Input.GetMouseButtonDown(0))
             DetectLocationClick();
-        }
     }
 
     private void DetectLocationClick()
     {
-        Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        RaycastHit2D hit = Physics2D.Raycast(mousePosition, Vector2.zero);
+        // ถ้าคลิกบน UI ไม่ต้องทำอะไร
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
 
-        if (hit.collider != null)
-        {
-            GameObject clickedObject = hit.collider.gameObject;
-            MoveToLocation(clickedObject);
-        }
+        Vector2 mouseWorld = cam.ScreenToWorldPoint(Input.mousePosition);
+
+        // ดีกว่า Raycast ทิศทางศูนย์: ใช้ OverlapPoint
+        Collider2D col = Physics2D.OverlapPoint(mouseWorld, clickableMask);
+        if (!col) return;
+
+        MoveToLocation(col.gameObject);
     }
 
-    private void MoveToLocation(GameObject clickedObject)
+    private void MoveToLocation(GameObject clicked)
     {
-        switch (clickedObject.tag)
+        if (!heroController) return;
+
+        // หา waypoint จาก tag
+        var wp = FindWaypointByTag(clicked.tag);
+        if (wp == null)
         {
-            case "Finansia":
-                heroController.SetDestinationByClick(finansiaWaypoint);
-                break;
-            case "GoldShop":
-                heroController.SetDestinationByClick(goldShopWaypoint);
-                break;
-            case "Bank":
-                heroController.SetDestinationByClick(bankWaypoint);
-                break;
-            case "RealEstate":
-                heroController.SetDestinationByClick(realEstateWaypoint);
-                break;
-            case "Lottery":
-                heroController.SetDestinationByClick(lotteryWaypoint);
-                break;
-            case "TaxOffice":
-                heroController.SetDestinationByClick(taxOfficeWaypoint);
-                break;
-            case "Police":
-                heroController.SetDestinationByClick(policeWaypoint);
-                break;
-            case "Casino":
-                heroController.SetDestinationByClick(casinoWaypoint);
-                break;
-            default:
-                Debug.Log("ไม่ได้คลิกที่สถานที่ที่รองรับ");
-                break;
+            Debug.Log("ไม่มี mapping สำหรับ tag: " + clicked.tag);
+            return;
         }
+
+        heroController.SetDestinationByClick(wp);
     }
+
+    private GameObject FindWaypointByTag(string tag)
+    {
+        for (int i = 0; i < mappings.Count; i++)
+        {
+            if (mappings[i].tag == tag) return mappings[i].waypoint;
+        }
+        return null;
+    }*/
 }

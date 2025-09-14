@@ -13,6 +13,7 @@ TagManager:
   - Casino
   - Undefined
   - Bank
+  - MapCanvas
   layers:
   - Default
   - TransparentFX

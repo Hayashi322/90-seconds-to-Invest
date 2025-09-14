@@ -13,7 +13,7 @@ public class HeroController : MonoBehaviour
 
 
     /// //////////////////////////////////
-  
+
 
     [SerializeField] private WaypointController waypointController;
     [SerializeField] private GameObject startWaypoint; // จุดเริ่มต้นที่กำหนด
@@ -28,7 +28,7 @@ public class HeroController : MonoBehaviour
 
     void Start()
     {
-       
+
         if (startWaypoint != null)
         {
             currentNode = startWaypoint;
@@ -121,7 +121,7 @@ public class HeroController : MonoBehaviour
     {
         if (pathWay == null || pathWay.Count == 0) return;
         // ตรวจสอบว่าดัชนี `_currentPathIndex` อยู่ในขอบเขตที่ถูกต้อง
-        if (_currentPathIndex < 0 || _currentPathIndex >= pathWay.Count|| uiIsOpen == true) //เช็คว่าหน่าต่าง ui เปิดอยู่ไหม
+        if (_currentPathIndex < 0 || _currentPathIndex >= pathWay.Count || uiIsOpen == true) //เช็คว่าหน่าต่าง ui เปิดอยู่ไหม
         {
             Debug.LogError("Path Index เกินขอบเขต! _currentPathIndex: " + _currentPathIndex);
             pathWay = null; // หยุดการเดินถ้าเกิดข้อผิดพลาด
