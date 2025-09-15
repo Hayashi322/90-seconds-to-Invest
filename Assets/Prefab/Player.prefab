@@ -177,7 +177,7 @@ MonoBehaviour:
   MapCanvas: {fileID: 0}
   waypointController: {fileID: 0}
   startWaypoint: {fileID: 0}
-  moveSpeed: 1
+  moveSpeed: 4
   reachOffset: 0.05
   PauseByUI:
     m_InternalValue: 0

@@ -18,7 +18,7 @@ public class HeroControllerNet : NetworkBehaviour
     [Header("Pathfinding")]
     [SerializeField] private WaypointController waypointController;
     [SerializeField] private GameObject startWaypoint; // optional
-    [SerializeField] private float moveSpeed = 1f;
+    [SerializeField] private float moveSpeed = 4f;
     [SerializeField] private float reachOffset = 0.05f;
 
     public NetworkVariable<bool> PauseByUI = new NetworkVariable<bool>(

@@ -5,30 +5,33 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MainMenu.unity
     guid: 5cca26bcf507c2c4a8d00573ba1d0d20
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/LobbyScene.unity
     guid: 0ba4a5bc18fb4dd45b01b4134f0116a5
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/SettingsScene.unity
     guid: f83e9a24f7b8fe848b8fc33df2d6ac3f
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/GameScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Win_Orange.unity
     guid: 75727e4bdbeeea4458296327e69155e9
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Win_Gray.unity
     guid: 8b70db31937c11549b111cc6c8f31326
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Win_Brown.unity
     guid: 93adfd0bea889864fa54c6694f95aabd
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/FinalScoreScene.unity
     guid: 915943d7498d91f4c9a8ec51832b3540
+  - enabled: 1
+    path: Assets/Scenes/GameSceneNet.unity
+    guid: 17bf2a3219a1b0941b1ae0d2020a279a
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
