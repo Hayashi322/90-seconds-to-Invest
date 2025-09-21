@@ -252,7 +252,18 @@ public class HeroControllerNet : NetworkBehaviour
     private void OpenCanvasClientRpc(int canvasNum, ClientRpcParams rpcParams = default)
     {
         if (!IsOwner) return;
-        if (!MapCanvas || canvasNum < 0) return;
-        MapCanvas.GetComponent<OpenCanvas>()?.openCanvas(canvasNum);
+        if (canvasNum < 0) return;
+
+#if UNITY_2023_1_OR_NEWER
+        var opener = FindFirstObjectByType<OpenCanvas>(FindObjectsInactive.Include);
+#else
+    var opener = FindObjectOfType<OpenCanvas>(true);
+#endif
+        if (!opener)
+        {
+            Debug.LogWarning("[HeroControllerNet] OpenCanvas not found in scene.");
+            return;
+        }
+        opener.openCanvas(canvasNum); // จะ pause/บังคลิก/แจ้ง SetUIOpen(true) ให้เอง
     }
 }

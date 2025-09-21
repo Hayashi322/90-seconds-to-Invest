@@ -1,33 +1,37 @@
-﻿using UnityEngine;
-using UnityEngine.SceneManagement;
-using TMPro; // เพิ่มสำหรับ TextMeshPro
+﻿using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviour
 {
-    public TMP_InputField nameInputField;
+    [SerializeField] private TMP_InputField joinCodeField;
+    [SerializeField] private Button quitButton;
 
-    public void PlayGame()
+    private void Start()
     {
-        string inputName = nameInputField.text;
-
-        if (string.IsNullOrEmpty(inputName))
-        {
-            Debug.Log("กรุณาใส่ชื่อก่อนเริ่มเกม");
-            return;
-        }
-
-        PlayerData.Instance.playerName = inputName;
-        SceneManager.LoadScene("LobbyScene");
+        quitButton.onClick.AddListener(QuitGame);
     }
 
-    public void OpenSettings()
+    public async void StartHost()
     {
-        SceneManager.LoadScene("SettingsScene");
+        HostSingleton.Instance.CreateHost();
+
+        // (ถ้ามี RelayJoinCodeDisplay อยู่ในฉาก มันจะ subscribe เองตอน OnEnable)
+        await HostSingleton.Instance.GameManager.StartHostAsync();
+        // หลังได้โค้ด อีเวนต์จะยิง → UI อัปเดตเอง
+    }
+
+    public async void StartClient()
+    {
+        await ClientSingleton.Instance.GameManager.StartClientAsync(joinCodeField.text);
     }
 
     public void QuitGame()
     {
-        Application.Quit();
-        Debug.Log("Game is exiting...");
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.ExitPlaymode();
+#else
+            Application.Quit();
+#endif
     }
 }

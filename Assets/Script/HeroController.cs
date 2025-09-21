@@ -7,12 +7,11 @@ using Unity.VisualScripting;
 using UnityEngine;
 public class HeroController : MonoBehaviour
 {
-    public bool uiIsOpen = false; //เช็คว่าหน้าต่างเปิดไหม
+    public bool uiIsOpen = false; 
     [SerializeField] private GameObject MapCanvas;
     private int canvasNumber;
 
 
-    /// //////////////////////////////////
 
 
     [SerializeField] private WaypointController waypointController;
