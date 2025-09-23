@@ -23,14 +23,28 @@ public class InventoryManager : MonoBehaviour
     }
     public void BuyStock(string stockName, int qty, float price)
     {
-        float cost = qty * price;
-        if (cash >= cost)
+        float total = qty * price;
+        if (cash >= total)
         {
-            cash -= cost;
+            cash -= total;
             if (!stockHoldings.ContainsKey(stockName))
                 stockHoldings[stockName] = 0;
             stockHoldings[stockName] += qty;
-            Debug.Log($"ซื้อหุ้น {stockName} {qty} หน่วย | เงินคงเหลือ: {cash}");
         }
     }
+
+    public void SellStock(string stockName, int qty, float price)
+    {
+        if (stockHoldings.ContainsKey(stockName) && stockHoldings[stockName] >= qty)
+        {
+            cash += qty * price;
+            stockHoldings[stockName] -= qty;
+        }
+    }
+
+    public int GetStockQuantity(string stockName)
+    {
+        return stockHoldings.ContainsKey(stockName) ? stockHoldings[stockName] : 0;
+    }
+
 }
