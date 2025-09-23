@@ -61,7 +61,7 @@ public class Timer : NetworkBehaviour
         // เปลี่ยนเวลาตามรอบ
         if (roundCount.Value == 1)
         {
-            currentDuration.Value = 15f;
+            currentDuration.Value = 90f;
             
         }
         else if (roundCount.Value == 2)

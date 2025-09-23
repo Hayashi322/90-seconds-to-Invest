@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 
 public class StockMarketUI : MonoBehaviour
@@ -15,7 +15,7 @@ public class StockMarketUI : MonoBehaviour
         {
             GameObject go = Instantiate(stockRowPrefab, content);
             var ui = go.GetComponent<StockUI>();
-            ui.Initialize(stock);
+            ui.Initialize(stock, this);
             stockUIs.Add(ui);
         }
 
@@ -26,5 +26,10 @@ public class StockMarketUI : MonoBehaviour
     {
         foreach (var ui in stockUIs)
             ui.Refresh();
+    }
+
+    public void OnStockSelected(StockData stock)
+    {
+        StockMarketManager.Instance.selectedStock = stock.stockName;
     }
 }

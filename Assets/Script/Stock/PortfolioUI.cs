@@ -1,16 +1,18 @@
 ﻿using UnityEngine;
 using TMPro;
-using System.Text;
+// using System.Text; // ยังไม่ต้องใช้ถ้ายังไม่แสดงพอร์ต
 
 public class PortfolioUI : MonoBehaviour
 {
     public TextMeshProUGUI walletText;
-    public TextMeshProUGUI holdingText;
+    //public TextMeshProUGUI holdingText;
 
     void Update()
     {
-        walletText.text = $"💼 เงินคงเหลือ: {InventoryManager.Instance.cash:N0} บาท";
+        walletText.text = $"{InventoryManager.Instance.cash:N0}";
 
+        // ยังไม่แสดงพอร์ตหุ้น
+        /*
         StringBuilder sb = new StringBuilder();
         foreach (var entry in InventoryManager.Instance.stockHoldings)
         {
@@ -21,5 +23,6 @@ public class PortfolioUI : MonoBehaviour
         }
 
         holdingText.text = sb.ToString();
+        */
     }
 }

@@ -6,6 +6,8 @@ public class StockMarketManager : MonoBehaviour
     public static StockMarketManager Instance;
     public List<StockData> stocks = new List<StockData>();
 
+    public string selectedStock; // ✅ หุ้นที่ถูกเลือกใน UI
+
     void Awake()
     {
         if (Instance == null) Instance = this;
