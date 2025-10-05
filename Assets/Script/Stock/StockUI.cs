@@ -9,21 +9,25 @@ public class StockUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI changeText;
     [SerializeField] private Button selectButton;
 
-    private StockData data;
-    private StockMarketUI marketUI;
+    private int index;
+    private StockMarketUI parentUI;
+    private StockMarketManager Market => StockMarketManager.Instance;
 
-    public void Initialize(StockData stock, StockMarketUI parentUI)
+    public void Initialize(int idx, StockMarketUI parent)
     {
-        data = stock;
-        marketUI = parentUI;
-
-        stockNameText.text = data.stockName;
+        index = idx;
+        parentUI = parent;
         selectButton.onClick.AddListener(OnSelect);
         Refresh();
     }
 
     public void Refresh()
     {
+        if (!Market || Market.networkStocks == null) return;
+        if (index < 0 || index >= Market.networkStocks.Count) return;
+
+        var data = Market.networkStocks[index];
+        stockNameText.text = data.stockName.ToString();
         priceText.text = $"{data.currentPrice:N2}";
         float change = data.currentPrice - data.lastPrice;
         changeText.text = $"{(change >= 0 ? "+" : "")}{change:N2}";
@@ -32,6 +36,6 @@ public class StockUI : MonoBehaviour
 
     private void OnSelect()
     {
-        marketUI.OnStockSelected(data);
+        parentUI?.OnStockSelected(index);
     }
 }

@@ -1,10 +1,14 @@
-﻿using TMPro;
-using UnityEngine;
+﻿using UnityEngine;
+using TMPro;
+
 public class CashDisplay : MonoBehaviour
 {
-    public TMP_Text cashText;
+    [SerializeField] private TextMeshProUGUI cashText;
+
     void Update()
     {
-        cashText.text = InventoryManager.Instance.cash.ToString("N0");
+        var inv = InventoryManager.Instance;
+        if (inv)
+            cashText.text = $"{inv.cash.Value:N0}";   // ✅ ใช้ .Value
     }
 }

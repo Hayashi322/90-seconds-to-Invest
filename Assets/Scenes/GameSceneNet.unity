@@ -6943,6 +6943,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 654563726}
+  - component: {fileID: 654563727}
   - component: {fileID: 654563725}
   m_Layer: 0
   m_Name: StockMarketManager
@@ -6963,27 +6964,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b5868793bdc16244a5107ffefc6ed54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  stocks:
-  - stockName: TTP
-    currentPrice: 120
-    lastPrice: 120
-    volatility: 0.02
-  - stockName: JBANK
-    currentPrice: 84.5
-    lastPrice: 84.5
-    volatility: 0.015
-  - stockName: TravelTH
-    currentPrice: 63.25
-    lastPrice: 63.25
-    volatility: 0.03
-  - stockName: BioMed
-    currentPrice: 96.8
-    lastPrice: 96.8
-    volatility: 0.04
-  - stockName: Thunder
-    currentPrice: 41.3
-    lastPrice: 41.3
-    volatility: 0.05
+  ShowTopMostFoldoutHeaderGroup: 1
   selectedStock: 
 --- !u!4 &654563726
 Transform:
@@ -7000,6 +6981,31 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &654563727
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 654563724}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 2397984517
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!1 &654918273
 GameObject:
   m_ObjectHideFlags: 0
@@ -8510,18 +8516,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df22c0a4764dc57468bc2006febd3459, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  is10000: 1
-  is50000: 0
-  is100000: 0
   dice1: {fileID: 654918276}
   dice2: {fileID: 1391574549}
   money: {fileID: 630632040}
   result: {fileID: 239044961}
+  cost: 0
   hightEven: 1
   hightOdd: 0
   lowEven: 0
   lowOdd: 0
-  cost: 0
   inventoryManager: {fileID: 1424140153}
 --- !u!1 &877338626
 GameObject:

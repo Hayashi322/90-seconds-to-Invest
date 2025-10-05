@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using TMPro;
+﻿using TMPro;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class BuySellPanelUI : MonoBehaviour
@@ -10,51 +10,60 @@ public class BuySellPanelUI : MonoBehaviour
     public Button buyButton;
     public Button sellButton;
 
-    void Start()
+    private void Start()
     {
         buyButton.onClick.AddListener(OnBuy);
         sellButton.onClick.AddListener(OnSell);
-        volumeInput.onValueChanged.AddListener(delegate { UpdateTotal(); });
+        volumeInput.onValueChanged.AddListener(_ => UpdateTotal());
     }
 
-    void Update()
+    private void Update()
     {
-        string selected = StockMarketManager.Instance.selectedStock;
-        if (!string.IsNullOrEmpty(selected))
+        var mkt = StockMarketManager.Instance;
+        if (mkt != null && !string.IsNullOrEmpty(mkt.selectedStock))
         {
-            selectedStockText.text = selected;
+            selectedStockText.text = mkt.selectedStock;
             UpdateTotal();
         }
     }
 
-    void UpdateTotal()
+    private void UpdateTotal()
     {
         if (!int.TryParse(volumeInput.text, out int qty)) qty = 0;
-        float price = StockMarketManager.Instance.GetStock(StockMarketManager.Instance.selectedStock)?.currentPrice ?? 0f;
+        float price = 0f;
+        var mkt = StockMarketManager.Instance;
+        if (mkt != null) price = mkt.GetCurrentPrice(mkt.selectedStock);
         float total = qty * price;
         totalPriceText.text = $"{total:N2}";
     }
 
-    void OnBuy()
+    private void OnBuy()
     {
-        string stock = StockMarketManager.Instance.selectedStock;
+        var mkt = StockMarketManager.Instance;
+        var inv = InventoryManager.Instance;
+        if (mkt == null || inv == null) return;
+
+        string stock = mkt.selectedStock;
         if (string.IsNullOrEmpty(stock)) return;
 
         int qty = int.TryParse(volumeInput.text, out int v) ? v : 0;
-        float price = StockMarketManager.Instance.GetStock(stock).currentPrice;
+        float price = mkt.GetCurrentPrice(stock);
 
-        InventoryManager.Instance.BuyStock(stock, qty, price);
+        inv.BuyStockServerRpc(stock, qty, price); // เรียกที่ Server
     }
 
-    void OnSell()
+    private void OnSell()
     {
-        string stock = StockMarketManager.Instance.selectedStock;
+        var mkt = StockMarketManager.Instance;
+        var inv = InventoryManager.Instance;
+        if (mkt == null || inv == null) return;
+
+        string stock = mkt.selectedStock;
         if (string.IsNullOrEmpty(stock)) return;
 
         int qty = int.TryParse(volumeInput.text, out int v) ? v : 0;
-        float price = StockMarketManager.Instance.GetStock(stock).currentPrice;
+        float price = mkt.GetCurrentPrice(stock);
 
-        InventoryManager.Instance.SellStock(stock, qty, price);
+        inv.SellStockServerRpc(stock, qty, price); // เรียกที่ Server
     }
-
 }
