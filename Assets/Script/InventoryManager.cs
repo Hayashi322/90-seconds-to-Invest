@@ -3,7 +3,7 @@ using UnityEngine;
 using Unity.Netcode;
 using Unity.Collections;
 
-// ===== ถ้าเธอแยกไปไฟล์ CasinoTypes.cs แล้ว ให้ลบสองชนิดนี้ออก และใส่ using <namespace> แทน =====
+// ===== ชนิดที่ใช้ร่วม =====
 public enum BetChoice
 {
     HighEven,  // ผลรวม >= 6 และเป็นคู่
@@ -19,7 +19,6 @@ public struct CasinoResult
     public int dice2;
     public string message;
 }
-// =================================================================================================
 
 [Serializable]
 public struct HoldingNet : INetworkSerializable, IEquatable<HoldingNet>
@@ -37,6 +36,7 @@ public struct HoldingNet : INetworkSerializable, IEquatable<HoldingNet>
         => stockName.Equals(other.stockName) && quantity == other.quantity;
 }
 
+// ===== InventoryManager =====
 public class InventoryManager : NetworkBehaviour
 {
     public static InventoryManager Instance;
@@ -48,7 +48,8 @@ public class InventoryManager : NetworkBehaviour
     public NetworkVariable<int> goldAmount = new(
         0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
-    public NetworkList<HoldingNet> stockHoldings;
+    // ✅ อินิตตั้งแต่ประกาศ (ห้ามเป็น null ตอนสปอน)
+    public NetworkList<HoldingNet> stockHoldings { get; private set; } = new NetworkList<HoldingNet>();
 
     // อีเวนต์แจ้งผลคาสิโนให้ UI (ถูกยิงเฉพาะ client เจ้าของ)
     public event Action<CasinoResult> CasinoResultReceived;
@@ -62,12 +63,13 @@ public class InventoryManager : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
-        if (stockHoldings == null)
-            stockHoldings = new NetworkList<HoldingNet>();
+        // ❌ ไม่ต้อง new ซ้ำแล้ว (เราสร้างไว้ตั้งแต่ประกาศ)
+        // if (stockHoldings == null) stockHoldings = new NetworkList<HoldingNet>();
 
         if (IsServer && cash.Value <= 0)
             cash.Value = 10_000_000f;
 
+        // ให้ Instance ชี้มาที่อินเวนทอรีของ local player
         if (IsOwner) Instance = this;
     }
 
@@ -140,8 +142,7 @@ public class InventoryManager : NetworkBehaviour
     // ============================
     public int GetStockQuantity(string stockName)
     {
-        if (stockHoldings == null) return 0;
-        var key = (FixedString64Bytes)stockName;   // แปลงก่อนเทียบ
+        var key = (FixedString64Bytes)stockName;
         for (int i = 0; i < stockHoldings.Count; i++)
             if (stockHoldings[i].stockName.Equals(key))
                 return stockHoldings[i].quantity;
@@ -209,14 +210,14 @@ public class InventoryManager : NetworkBehaviour
     // ============================
     private void AddOrIncreaseStock(string stockName, int qty)
     {
-        var key = (FixedString64Bytes)stockName;   // แปลงก่อน
+        var key = (FixedString64Bytes)stockName;
         for (int i = 0; i < stockHoldings.Count; i++)
         {
             if (stockHoldings[i].stockName.Equals(key))
             {
                 var h = stockHoldings[i];
                 h.quantity += qty;
-                stockHoldings[i] = h; // ต้องเขียนกลับเพื่อ trigger sync
+                stockHoldings[i] = h; // trigger sync
                 return;
             }
         }
@@ -225,7 +226,7 @@ public class InventoryManager : NetworkBehaviour
 
     private void RemoveOrDecreaseStock(string stockName, int qty)
     {
-        var key = (FixedString64Bytes)stockName;   // แปลงก่อน
+        var key = (FixedString64Bytes)stockName;
         for (int i = 0; i < stockHoldings.Count; i++)
         {
             if (stockHoldings[i].stockName.Equals(key))

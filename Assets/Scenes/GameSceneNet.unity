@@ -6754,7 +6754,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 844028198}
         m_TargetAssemblyTypeName: casinoUI, Assembly-CSharp
-        m_MethodName: rollDice
+        m_MethodName: RollDice
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -8520,12 +8520,13 @@ MonoBehaviour:
   dice2: {fileID: 1391574549}
   money: {fileID: 630632040}
   result: {fileID: 239044961}
+  amountInput: {fileID: 1277261174}
+  rollButton: {fileID: 631472520}
   cost: 0
   hightEven: 1
   hightOdd: 0
   lowEven: 0
   lowOdd: 0
-  inventoryManager: {fileID: 1424140153}
 --- !u!1 &877338626
 GameObject:
   m_ObjectHideFlags: 0
@@ -11783,8 +11784,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f2979f75d74db44fbb0be038971c1cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cash: 10000000
-  goldAmount: 0
+  ShowTopMostFoldoutHeaderGroup: 1
+  cash:
+    m_InternalValue: 10000000
+  goldAmount:
+    m_InternalValue: 0
 --- !u!114 &1424140154
 MonoBehaviour:
   m_ObjectHideFlags: 0
