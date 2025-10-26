@@ -10,9 +10,9 @@ public class GoldShopManager : NetworkBehaviour
     [SerializeField] private int initialSell = 48_000;
 
     [Header("Fluctuation")]
-    [SerializeField] private int minDelta = -1_000;
-    [SerializeField] private int maxDelta = 10_000;
-    [SerializeField] private float updateInterval = 5f; // seconds
+    [SerializeField] private int minDelta = -10000;
+    [SerializeField] private int maxDelta = 5000;
+    [SerializeField] private float updateInterval = 10f; // seconds
 
     // ✅ ราคาที่ซิงก์ข้ามเครือข่าย (Server เขียน / ทุกคนอ่าน)
     public NetworkVariable<int> BuyGoldPrice = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -46,9 +46,22 @@ public class GoldShopManager : NetworkBehaviour
     private void ServerUpdatePrices()
     {
         int delta = Random.Range(minDelta, maxDelta + 1);
-        int newBuy = Mathf.Max(1_000, BuyGoldPrice.Value + delta);
-        int newSell = Mathf.Max(0, newBuy - 1_000); // กำหนดให้ขายถูกกว่าซื้อเสมอ
+       // int newBuy = Mathf.Max(1_000, delta);
+       // int newSell = Mathf.Max(0, newBuy - 3_000);
 
+        Debug.Log(delta);
+
+         int newBuy = Mathf.Max(1_000, BuyGoldPrice.Value + delta);
+         
+        if(newBuy > 60000)
+        {
+            newBuy = 60000;
+        }
+        if(newBuy < 10000)
+        {
+            newBuy = 10000;
+        }
+        int newSell = Mathf.Max(0, newBuy - 3_000); // กำหนดให้ขายถูกกว่าซื้อเสมอ*/
         BuyGoldPrice.Value = newBuy;
         SellGoldPrice.Value = newSell;
     }

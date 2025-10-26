@@ -15578,9 +15578,9 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   initialBuy: 50000
   initialSell: 48000
-  minDelta: -1000
+  minDelta: -10000
   maxDelta: 10000
-  updateInterval: 5
+  updateInterval: 10
   BuyGoldPrice:
     m_InternalValue: 0
   SellGoldPrice:
