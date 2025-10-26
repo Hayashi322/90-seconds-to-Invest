@@ -73,6 +73,38 @@ public class InventoryManager : NetworkBehaviour
         if (IsOwner) Instance = this;
     }
 
+
+    // ===== GOLD (Server authoritative) =====
+    [ServerRpc(RequireOwnership = false)]
+    public void BuyGoldServerRpc(int qty)
+    {
+        if (qty <= 0) return;
+
+        var shop = GoldShopManager.Instance;
+        int unitPrice = shop ? shop.BuyGoldPrice.Value : 50_000; // fallback
+
+        float cost = qty * unitPrice;
+        if (cash.Value < cost) return;
+
+        cash.Value -= cost;
+        goldAmount.Value += qty;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SellGoldServerRpc(int qty)
+    {
+        if (qty <= 0) return;
+        if (goldAmount.Value < qty) return;
+
+        var shop = GoldShopManager.Instance;
+        int unitPrice = shop ? shop.SellGoldPrice.Value : 48_000; // fallback
+
+        goldAmount.Value -= qty;
+        cash.Value += qty * unitPrice;
+    }
+
+
+
     // ============================
     //       Casino (Server)
     // ============================
