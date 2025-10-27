@@ -103,12 +103,12 @@ TextureImporter:
       name: payTax_0
       rect:
         serializedVersion: 2
-        x: 561
+        x: 751
         y: 239
-        width: 797
-        height: 398
+        width: 416
+        height: 309
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 3921d8ad162dffd4a8bfedd13881564e
     internalID: 0
     vertices: []
     indices: 
@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      payTax_0: -5097861381818935113
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
