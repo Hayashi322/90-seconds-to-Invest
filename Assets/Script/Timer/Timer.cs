@@ -85,15 +85,15 @@ public class Timer : NetworkBehaviour
         // ความยาวเวลาแต่ละสเต็ป (ตามลอจิกเดิม)
         switch (roundCount.Value)
         {
-            case 1: currentTime.Value = 60f; break; // R1 P1
-            case 2: currentTime.Value = 10f; break; // R1 P2
-            case 3: currentTime.Value = 10f; break; // R1 P3
-            case 4: currentTime.Value = 30f; break; // R2 P1 (เปิด canvases[0])
-            case 5: currentTime.Value = 10f; break; // R2 P2
-            case 6: currentTime.Value = 10f; break; // R2 P3
-            case 7: currentTime.Value = 15f; break; // R3 P1 (เปิด canvases[1])
-            case 8: currentTime.Value = 10f; break; // R3 P2
-            case 9: currentTime.Value = 10f; break; // R3 P3
+            case 1: currentTime.Value = 90f; break; // R1 P1
+            case 2: currentTime.Value = 60f; break; // R1 P2
+            case 3: currentTime.Value = 30f; break; // R1 P3
+            case 4: currentTime.Value = 90f; break; // R2 P1 (เปิด canvases[0])
+            case 5: currentTime.Value = 60f; break; // R2 P2
+            case 6: currentTime.Value = 30f; break; // R2 P3
+            case 7: currentTime.Value = 90f; break; // R3 P1 (เปิด canvases[1])
+            case 8: currentTime.Value = 60f; break; // R3 P2
+            case 9: currentTime.Value = 30f; break; // R3 P3
             default:
                 currentTime.Value = 99999f;          // กันวน
                 break;
