@@ -1,6 +1,7 @@
 ﻿using TMPro;
 using Unity.Netcode;
 using UnityEngine;
+using static UnityEngine.Rendering.BoolParameter;
 
 public class Timer : NetworkBehaviour
 {
@@ -85,15 +86,15 @@ public class Timer : NetworkBehaviour
         // ความยาวเวลาแต่ละสเต็ป (ตามลอจิกเดิม)
         switch (roundCount.Value)
         {
-            case 1: currentTime.Value = 90f; break; // R1 P1
-            case 2: currentTime.Value = 60f; break; // R1 P2
-            case 3: currentTime.Value = 30f; break; // R1 P3
-            case 4: currentTime.Value = 90f; break; // R2 P1 (เปิด canvases[0])
-            case 5: currentTime.Value = 60f; break; // R2 P2
-            case 6: currentTime.Value = 30f; break; // R2 P3
-            case 7: currentTime.Value = 90f; break; // R3 P1 (เปิด canvases[1])
-            case 8: currentTime.Value = 60f; break; // R3 P2
-            case 9: currentTime.Value = 30f; break; // R3 P3
+            case 1: currentTime.Value = 90f; break; // R1 P1   90
+            case 2: currentTime.Value = 60f; break; // R1 P2   60
+            case 3: currentTime.Value = 30f; break; // R1 P3   30
+            case 4: currentTime.Value = 90f; break; // R2 P1 (เปิด canvases[0])  90
+            case 5: currentTime.Value = 60f; break; // R2 P2  60
+            case 6: currentTime.Value = 30f; break; // R2 P3  30
+            case 7: currentTime.Value = 90f; break; // R3 P1 (เปิด canvases[1]) 90
+            case 8: currentTime.Value = 60f; break; // R3 P2 60
+            case 9: currentTime.Value = 30f; break; // R3 P3 30
             default:
                 currentTime.Value = 99999f;          // กันวน
                 break;
@@ -146,10 +147,12 @@ public class Timer : NetworkBehaviour
         if (Round == 2 && Phase == 1 && canvases.Length >= 1 && canvases[0])
         {
             canvases[0].alpha = 1f; canvases[0].blocksRaycasts = true; canvases[0].interactable = true;
+            Invoke(nameof(CloseAllPanels), 4f);
         }
         else if (Round == 3 && Phase == 1 && canvases.Length >= 2 && canvases[1])
         {
             canvases[1].alpha = 1f; canvases[1].blocksRaycasts = true; canvases[1].interactable = true;
+            Invoke(nameof(CloseAllPanels), 4f);
         }
     }
 
@@ -169,5 +172,10 @@ public class Timer : NetworkBehaviour
             c.alpha = 0f; c.blocksRaycasts = false; c.interactable = false;
         }
         if (taxPanel) taxPanel.SetActive(false);
+    }
+
+    private void  CloseCanvas()
+    {
+
     }
 }
