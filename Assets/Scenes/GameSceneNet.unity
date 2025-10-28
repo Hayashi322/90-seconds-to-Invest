@@ -5649,7 +5649,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 435067400}
   m_Enabled: 1
-  m_Alpha: 0
+  m_Alpha: 1
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
@@ -5738,7 +5738,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 435067400}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0c2f7d5363033b4bb7a11fe50591972, type: 3}
+  m_Script: {fileID: 11500000, guid: c6c53e0c45d44b74fa663172b407b5ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   goldsellValue: {fileID: 1172329225}
