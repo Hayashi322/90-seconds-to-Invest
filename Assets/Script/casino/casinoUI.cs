@@ -3,7 +3,7 @@ using TMPro;
 using System.Collections;
 using Unity.Netcode;
 using UnityEngine.UI;
-using Game.Economy;
+// using Game.Economy; // ถ้าไม่ได้ใช้ให้ลบได้
 
 public class casinoUI : MonoBehaviour
 {
@@ -12,12 +12,15 @@ public class casinoUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI dice2;
     [SerializeField] private TextMeshProUGUI money;
     [SerializeField] private TextMeshProUGUI result;
-    [SerializeField] private TMP_InputField amountInput; // optional
+    [SerializeField] private TMP_InputField amountInput;
     [SerializeField] private Button rollButton;
 
     [SerializeField] private Button[] PriceButton;
     [SerializeField] private Button[] BetButton;
 
+    [Header("Enter Message")]
+    [SerializeField] private TextMeshProUGUI enterMessageText;   // ← ลาก Text TMP สำหรับโชว์ข้อความเข้า UI
+    [SerializeField] private float enterMessageDuration = 3f;    // ระยะเวลาที่แสดงข้อความ (วินาที)
 
     [Header("Bet")]
     [SerializeField] private int cost = 10000;
@@ -32,6 +35,38 @@ public class casinoUI : MonoBehaviour
     {
         SetInteractable(false);
         StartCoroutine(BindLocalInventory());
+
+        // แสดงข้อความเมื่อเข้าหน้านี้
+        if (enterMessageText)
+        {
+            StopAllCoroutines();                    // กันเคสเปิด/ปิดซ้ำเร็ว ๆ
+            StartCoroutine(ShowEnterMessage());
+        }
+        else
+        {
+            // ถ้าไม่ได้เซ็ตช่องไว้ ใช้ result แทนชั่วคราว
+            if (result) StartCoroutine(ShowTempOn(result));
+        }
+    }
+
+    private IEnumerator ShowEnterMessage()
+    {
+        enterMessageText.text = "ตำรวจมาตัวใครตัวมันเด้อ";
+        enterMessageText.gameObject.SetActive(true);
+
+        yield return new WaitForSeconds(enterMessageDuration);
+
+        // เคลียร์ข้อความหลังครบเวลา
+        enterMessageText.text = "";
+        enterMessageText.gameObject.SetActive(false);
+    }
+
+    private IEnumerator ShowTempOn(TextMeshProUGUI target)
+    {
+        string backup = target.text;
+        target.text = "ตำรวจมาตัวใครตัวมันเด้อ";
+        yield return new WaitForSeconds(enterMessageDuration);
+        target.text = backup;
     }
 
     private void OnDisable()
@@ -45,11 +80,9 @@ public class casinoUI : MonoBehaviour
 
     private IEnumerator BindLocalInventory()
     {
-        // รอให้ Netcode เริ่มทำงาน
         while (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
             yield return null;
 
-        // หาตัว player ของเครื่องนี้
         var localObj = NetworkManager.Singleton.SpawnManager?.GetLocalPlayerObject();
         while (localObj == null)
         {
@@ -58,25 +91,13 @@ public class casinoUI : MonoBehaviour
         }
 
         inv = localObj.GetComponent<InventoryManager>();
-        if (inv == null)
-        {
-            // fallback เผื่อโปรเจกต์ยังใช้ Instance
-            inv = InventoryManager.Instance;
-        }
+        if (inv == null) inv = InventoryManager.Instance;
+        if (inv == null) yield break;
 
-        if (inv == null)
-        {
-            Debug.LogWarning("[casinoUI] Local InventoryManager not found.");
-            yield break;
-        }
-
-        // subscribe events
         inv.CasinoResultReceived += OnCasinoResult;
         inv.cash.OnValueChanged += OnCashChanged;
 
-        // updateครั้งแรก
         OnCashChanged(inv.cash.Value, inv.cash.Value);
-
         SetInteractable(true);
     }
 
@@ -95,13 +116,12 @@ public class casinoUI : MonoBehaviour
     {
         if (inv == null) return;
 
-        // ถ้ามีช่องกรอกจำนวนเดิมพัน ให้ดึงมาใช้แทน cost คงที่
         int bet = cost;
         if (amountInput && int.TryParse(amountInput.text, out var custom) && custom > 0)
             bet = custom;
 
         inv.PlaceBetServerRpc(bet, ResolveChoice());
-      //  if (result) result.text = "Rolling...";
+        // if (result) result.text = "Rolling...";
     }
 
     private BetChoice ResolveChoice()
@@ -126,68 +146,39 @@ public class casinoUI : MonoBehaviour
     }
 
     // Quick-select bet amount
-    public void pick10000() { cost = 10000; if (amountInput) amountInput.text = cost.ToString();}
-    public void pick50000() { cost = 50000; if (amountInput) amountInput.text = cost.ToString();}
-    public void pick100000() { cost = 100000; if (amountInput) amountInput.text = cost.ToString();}
+    public void pick10000() { cost = 10000; if (amountInput) amountInput.text = cost.ToString(); }
+    public void pick50000() { cost = 50000; if (amountInput) amountInput.text = cost.ToString(); }
+    public void pick100000() { cost = 100000; if (amountInput) amountInput.text = cost.ToString(); }
 
-    public void pickHight_Even() { hightEven = true; hightOdd = lowEven = lowOdd = false;}
-    public void pickHight_Odd() { hightOdd = true; hightEven = lowEven = lowOdd = false;}
-    public void pickLow_Even() { lowEven = true; hightEven = hightOdd = lowOdd = false;}
-    public void pickLow_Odd() { lowOdd = true; hightEven = hightOdd = lowEven = false;}
+    public void pickHight_Even() { hightEven = true; hightOdd = lowEven = lowOdd = false; }
+    public void pickHight_Odd() { hightOdd = true; hightEven = lowEven = lowOdd = false; }
+    public void pickLow_Even() { lowEven = true; hightEven = hightOdd = lowOdd = false; }
+    public void pickLow_Odd() { lowOdd = true; hightEven = hightOdd = lowEven = false; }
 
     private void Start()
     {
         for (int a = 0; a < BetButton.Length; a++)
         {
-            int index01 = a; // ต้องเก็บไว้ในตัวแปร local เพื่อไม่ให้ค่า i หลุดตอน callback
-            BetButton[a].onClick.AddListener(() => OnButtonClicked(index01));
-            BetButton[a].image.color = Color.white; // เริ่มต้นให้เป็นสีขาว
+            int idx = a;
+            BetButton[a].onClick.AddListener(() => OnButtonClicked(idx));
+            BetButton[a].image.color = Color.white;
         }
         for (int b = 0; b < PriceButton.Length; b++)
         {
-            int index02 = b; // ต้องเก็บไว้ในตัวแปร local เพื่อไม่ให้ค่า i หลุดตอน callback
-            PriceButton[b].onClick.AddListener(() => OnButtonClicked01(index02));
-            PriceButton[b].image.color = Color.white; // เริ่มต้นให้เป็นสีขาว
+            int idx = b;
+            PriceButton[b].onClick.AddListener(() => OnButtonClicked01(idx));
+            PriceButton[b].image.color = Color.white;
         }
     }
-    /* private void changColor(int i)
-     {
-         for (int j = 0; j < allButton.Length; j++)
-         {
-             if(j == i)
-             {
-                 ColorBlock colors = allButton[i].colors; 
-                 colors = Color.red;
-             }
-             else 
-             {
-                // ColorBlock colors = allButton[j].colors; colors.colorMultiplier = 1;
-             }
-         }
 
-
-     }*/
     private void OnButtonClicked(int clickedIndex)
     {
-        // วนลูปเปลี่ยนสีทุกปุ่ม
         for (int i = 0; i < BetButton.Length; i++)
-        {
-            if (i == clickedIndex)
-                BetButton[i].image.color = Color.gray;  /// ปุ่มที่ถูกกด → สีเทา
-            else
-                 BetButton[i].image.color = Color.white;   // ปุ่มอื่น → สีขาว
-        }
-       
+            BetButton[i].image.color = (i == clickedIndex) ? Color.gray : Color.white;
     }
     private void OnButtonClicked01(int clickedIndex)
     {
-       
         for (int j = 0; j < PriceButton.Length; j++)
-        {
-            if (j == clickedIndex)
-                PriceButton[j].image.color = Color.gray;  // ปุ่มที่ถูกกด → สีเทา
-            else
-                PriceButton[j].image.color = Color.white;   // ปุ่มอื่น → สีขาว
-        }
+            PriceButton[j].image.color = (j == clickedIndex) ? Color.gray : Color.white;
     }
 }
