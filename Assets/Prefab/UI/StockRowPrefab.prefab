@@ -368,6 +368,7 @@ MonoBehaviour:
   stockNameText: {fileID: 4870397666772666932}
   priceText: {fileID: 304790329442261255}
   changeText: {fileID: 2671464781985213697}
+  ownedText: {fileID: 1333314613955814240}
   selectButton: {fileID: 1467670212139005688}
 --- !u!1 &4412049223514502281
 GameObject:

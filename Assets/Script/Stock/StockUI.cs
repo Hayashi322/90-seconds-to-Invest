@@ -7,6 +7,7 @@ public class StockUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI stockNameText;
     [SerializeField] private TextMeshProUGUI priceText;
     [SerializeField] private TextMeshProUGUI changeText;
+    [SerializeField] private TextMeshProUGUI ownedText;   // ✅ เพิ่มส่วนนี้
     [SerializeField] private Button selectButton;
 
     private int index;
@@ -29,9 +30,17 @@ public class StockUI : MonoBehaviour
         var data = Market.networkStocks[index];
         stockNameText.text = data.stockName.ToString();
         priceText.text = $"{data.currentPrice:N2}";
+
         float change = data.currentPrice - data.lastPrice;
         changeText.text = $"{(change >= 0 ? "+" : "")}{change:N2}";
         changeText.color = change >= 0 ? Color.green : Color.red;
+
+        // ✅ แสดงจำนวนหุ้นที่ถืออยู่ (ดึงจาก InventoryManager)
+        int owned = 0;
+        if (InventoryManager.Instance != null)
+            owned = InventoryManager.Instance.GetStockQuantity(data.stockName.ToString());
+
+        ownedText.text = owned > 0 ? owned.ToString("N0") : "-";
     }
 
     private void OnSelect()

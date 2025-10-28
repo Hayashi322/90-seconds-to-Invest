@@ -25,21 +25,54 @@ public class StockMarketManager : NetworkBehaviour
 
         if (IsServer)
         {
-            // ตัวอย่างหุ้นเริ่มต้น
             networkStocks.Add(new StockDataNet
             {
-                stockName = (FixedString32Bytes)"TTP",
-                currentPrice = 100,
-                lastPrice = 100,
-                volatility = 0.05f
+                stockName = (FixedString32Bytes)"PTT",          // Energy / Oil & Gas
+                currentPrice = 31.75f,
+                lastPrice = 31.75f,
+                volatility = 0.020f    // ±2.0%
             });
+
             networkStocks.Add(new StockDataNet
             {
-                stockName = (FixedString32Bytes)"JBANK",
-                currentPrice = 200,
-                lastPrice = 200,
-                volatility = 0.04f
+                stockName = (FixedString32Bytes)"KBANK",        // Banking / Finance
+                currentPrice = 180.50f,
+                lastPrice = 180.50f,
+                volatility = 0.018f    // ±1.8%
             });
+
+            networkStocks.Add(new StockDataNet
+            {
+                stockName = (FixedString32Bytes)"AOT",          // Tourism / Airports
+                currentPrice = 39.50f,
+                lastPrice = 39.50f,
+                volatility = 0.030f    // ±3.0%
+            });
+
+            networkStocks.Add(new StockDataNet
+            {
+                stockName = (FixedString32Bytes)"BDMS",         // Healthcare / Hospitals
+                currentPrice = 32.00f,
+                lastPrice = 32.00f,
+                volatility = 0.015f    // ±1.5%
+            });
+
+            networkStocks.Add(new StockDataNet
+            {
+                stockName = (FixedString32Bytes)"DELTA",        // Technology / Electronics
+                currentPrice = 84.00f,
+                lastPrice = 84.00f,
+                volatility = 0.035f    // ±3.5%
+            });
+
+            networkStocks.Add(new StockDataNet
+            {
+                stockName = (FixedString32Bytes)"CPNREIT",      // Real Estate / REIT
+                currentPrice = 18.00f,
+                lastPrice = 18.00f,
+                volatility = 0.012f    // ±1.2%
+            });
+
 
             InvokeRepeating(nameof(UpdateStockPrices), 3f, 5f);
         }
