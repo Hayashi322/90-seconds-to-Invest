@@ -157,7 +157,7 @@ public class Timer : NetworkBehaviour
     {
         if (!roundText) return;
         if (roundCount.Value >= 10) roundText.text = "The END";
-        else roundText.text = $"{Round}                    {Phase}";
+        else roundText.text = $"{Round}                         {Phase}";
     }
 
     public void CloseAllPanels()
