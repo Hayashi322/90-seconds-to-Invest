@@ -46,7 +46,7 @@ public class GoldShopManager : NetworkBehaviour
     private void ServerUpdatePrices()
     {
         int delta = Random.Range(minDelta, maxDelta);
-        delta = delta * 100;
+        delta = delta * 400;
         GoldChangePrice.Value = delta ;
        // int newBuy = Mathf.Max(1_000, delta);
        // int newSell = Mathf.Max(0, newBuy - 3_000);
