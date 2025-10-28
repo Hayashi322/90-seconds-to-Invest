@@ -14,6 +14,7 @@ public class casinoUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI result;
     [SerializeField] private TMP_InputField amountInput; // optional
     [SerializeField] private Button rollButton;
+    
 
     [Header("Bet")]
     [SerializeField] private int cost = 10000;
@@ -97,7 +98,7 @@ public class casinoUI : MonoBehaviour
             bet = custom;
 
         inv.PlaceBetServerRpc(bet, ResolveChoice());
-        if (result) result.text = "Rolling...";
+      //  if (result) result.text = "Rolling...";
     }
 
     private BetChoice ResolveChoice()
@@ -118,7 +119,7 @@ public class casinoUI : MonoBehaviour
 
         if (dice1) dice1.text = r.dice1.ToString("F0");
         if (dice2) dice2.text = r.dice2.ToString("F0");
-        if (result) result.text = r.win ? "YOU WIN" : "YOU LOSE";
+        if (result) result.text = r.win ? "เอ็งชนะ" : "เอ็งแพ้";
     }
 
     // Quick-select bet amount
