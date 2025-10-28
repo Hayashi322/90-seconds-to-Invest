@@ -11340,7 +11340,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 844028192}
   m_Enabled: 1
-  m_Alpha: 0
+  m_Alpha: 1
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
@@ -11447,6 +11447,15 @@ MonoBehaviour:
   result: {fileID: 9402728}
   amountInput: {fileID: 1277261174}
   rollButton: {fileID: 631472520}
+  PriceButton:
+  - {fileID: 1049102691}
+  - {fileID: 2017833873}
+  - {fileID: 439869017}
+  BetButton:
+  - {fileID: 758549362}
+  - {fileID: 1060866241}
+  - {fileID: 99519993}
+  - {fileID: 516850286}
   cost: 0
   hightEven: 1
   hightOdd: 0
