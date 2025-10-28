@@ -8,6 +8,12 @@ public class StockInfoPanelUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI weaknessText;
     [SerializeField] private TextMeshProUGUI descText;
 
+    private void Start()
+    {
+        // ✅ เรียกค่าเริ่มต้นทันทีเมื่อเปิดเกม
+        ShowDefault();
+    }
+
     /// <summary>อัปเดตกล่องข้อมูลด้านขวาบนตามชื่อหุ้นที่เลือก</summary>
     public void ShowInfo(string stockName)
     {
@@ -56,11 +62,17 @@ public class StockInfoPanelUI : MonoBehaviour
                 break;
 
             default:
-                stockTitleText.text = stockName;
-                strengthText.text = "จุดแข็ง: -";
-                weaknessText.text = "จุดอ่อน: -";
-                descText.text = "ไม่มีข้อมูลเพิ่มเติม";
+                ShowDefault();
                 break;
         }
+    }
+
+    /// <summary>ข้อมูลเริ่มต้น (Default)</summary>
+    private void ShowDefault()
+    {
+        stockTitleText.text = "เลือกหุ้นเพื่อดูรายละเอียด";
+        strengthText.text = "จุดแข็ง: -";
+        weaknessText.text = "จุดอ่อน: -";
+        descText.text = "แตะชื่อหุ้นด้านซ้ายเพื่อดูรายละเอียด จุดแข็ง และจุดอ่อนของแต่ละประเภท";
     }
 }

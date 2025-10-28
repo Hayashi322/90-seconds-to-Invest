@@ -6011,11 +6011,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 435067400}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c6c53e0c45d44b74fa663172b407b5ac, type: 3}
+  m_Script: {fileID: 11500000, guid: d0c2f7d5363033b4bb7a11fe50591972, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  goldsellValue: {fileID: 1172329225}
-  goldbuyValue: {fileID: 364326991}
+  goldsellValue: {fileID: 364326991}
+  goldbuyValue: {fileID: 1172329225}
   goldAmountValue: {fileID: 1216461603}
   goldChangePrice: {fileID: 1994776848}
 --- !u!1 &439869015
