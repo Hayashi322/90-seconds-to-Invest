@@ -8,6 +8,7 @@ public class GoldShopUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI goldsellValue;   // SellGold_Text
     [SerializeField] private TextMeshProUGUI goldbuyValue;    // BuyGold_Text
     [SerializeField] private TextMeshProUGUI goldAmountValue; // GoldAmount_Text
+    [SerializeField] private TextMeshProUGUI goldChangePrice; // GoldChangePrice_Text
     // (ถ้ามีช่องโชว์เงิน ให้เพิ่ม TextMeshProUGUI cashText; แล้วเติมใน RefreshCash())
 
     private GoldShopManager shop;      // มี NetworkVariable ราคาทอง
@@ -74,6 +75,7 @@ public class GoldShopUI : MonoBehaviour
         if (!shop) return;
         if (goldbuyValue) goldbuyValue.text = $"{shop.BuyGoldPrice.Value:N0}";
         if (goldsellValue) goldsellValue.text = $"{shop.SellGoldPrice.Value:N0}";
+        if(goldChangePrice) goldChangePrice.text = $"ปรับราคา: {shop.GoldChangePrice.Value:N0}";
     }
 
     private void RefreshGold()

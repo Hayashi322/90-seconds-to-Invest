@@ -5880,6 +5880,7 @@ MonoBehaviour:
   goldsellValue: {fileID: 1172329225}
   goldbuyValue: {fileID: 364326991}
   goldAmountValue: {fileID: 1216461603}
+  goldChangePrice: {fileID: 1994776848}
 --- !u!1 &439869015
 GameObject:
   m_ObjectHideFlags: 0
@@ -10158,7 +10159,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 778035570}
   m_Enabled: 1
-  m_Alpha: 1
+  m_Alpha: 0
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
@@ -16982,12 +16983,14 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   initialBuy: 50000
   initialSell: 49900
-  minDelta: -10000
-  maxDelta: 10000
+  minDelta: -50
+  maxDelta: 50
   updateInterval: 10
   BuyGoldPrice:
     m_InternalValue: 0
   SellGoldPrice:
+    m_InternalValue: 0
+  GoldChangePrice:
     m_InternalValue: 0
 --- !u!4 &1468445331
 Transform:
@@ -22386,7 +22389,7 @@ GameObject:
   - component: {fileID: 1994776849}
   - component: {fileID: 1994776848}
   m_Layer: 0
-  m_Name: GoldAmount (1)
+  m_Name: GoldChangePrice_Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -22431,7 +22434,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u0E1B\u0E23\u0E31\u0E1A\u0E23\u0E32\u0E04\u0E32"
+  m_text: "\u0E1B\u0E23\u0E31\u0E1A\u0E23\u0E32\u0E04\u0E32: "
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 0069a7daa74e285428b789131c7e6c06, type: 2}
   m_sharedMaterial: {fileID: -7667797013842866394, guid: 0069a7daa74e285428b789131c7e6c06, type: 2}
