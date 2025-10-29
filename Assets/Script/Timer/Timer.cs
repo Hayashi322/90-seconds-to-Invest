@@ -62,7 +62,7 @@ public class Timer : NetworkBehaviour
             if (IsServer)
             {
                 // ✅ ครบ 9 เฟสแล้ว → ไปหน้า GameOver พร้อมกัน (ไม่ผ่าน Results)
-                if (roundCount.Value >= 9)
+                if (roundCount.Value >= 3)
                 {
                     // ใช้ GameResultManager ถ้ามีอยู่
                     if (GameResultManager.Instance)
