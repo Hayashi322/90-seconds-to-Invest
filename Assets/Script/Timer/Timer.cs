@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using TMPro;
 using Unity.Netcode;
+using System.Collections;
 
 public class Timer : NetworkBehaviour
 {
@@ -22,6 +23,11 @@ public class Timer : NetworkBehaviour
 
     [Header("Tax UI Panel (has TaxUI)")]
     [SerializeField] private GameObject taxPanel;
+
+    // (คงไว้ถ้าต้องการรอก่อนเริ่มรอบถัดไป)
+    [Header("Results Waiting Rule (unused now)")]
+    [SerializeField] private int minConnectedPlayers = 2;
+    [SerializeField] private float waitForClientsTimeout = 15f;
 
     private bool timeUpTriggered = false;
 
@@ -55,10 +61,14 @@ public class Timer : NetworkBehaviour
 
             if (IsServer)
             {
-                // ครบ 9 เฟส (Round 3, Phase 3) → เปิดฉากสรุปผลก่อน
+                // ✅ ครบ 9 เฟสแล้ว → ไปหน้า GameOver พร้อมกัน (ไม่ผ่าน Results)
                 if (roundCount.Value >= 9)
                 {
-                    GameResultManager.Instance.CollectAndOpenResultsServer(); // ← โหลด "Results"
+                    // ใช้ GameResultManager ถ้ามีอยู่
+                    if (GameResultManager.Instance)
+                        GameResultManager.Instance.ProceedToGameOverServerRpc();
+                    else
+                        SceneGoToGameOverServerRpc(); // fallback ถ้าไม่มีตัวจัดการ
                 }
                 else
                 {
@@ -73,9 +83,9 @@ public class Timer : NetworkBehaviour
         roundCount.Value++;
         switch (Phase)
         {
-            case 1: currentTime.Value = 90f; break;
-            case 2: currentTime.Value = 60f; break;
-            case 3: currentTime.Value = 30f; break;
+            case 1: currentTime.Value = 1f; break;
+            case 2: currentTime.Value = 1f; break;
+            case 3: currentTime.Value = 1f; break;
         }
         startTime.Value = NetworkManager.Singleton.ServerTime.Time;
 
@@ -118,4 +128,13 @@ public class Timer : NetworkBehaviour
         if (taxPanel) taxPanel.SetActive(true);
     }
     [ClientRpc] private void ShowTaxUIClientRpc(bool show) { if (taxPanel) taxPanel.SetActive(show); }
+
+    // ===== Fallback: ไป GameOver โดยตรงจาก Timer (ถ้าไม่มี GameResultManager) =====
+    [ServerRpc(RequireOwnership = false)]
+    private void SceneGoToGameOverServerRpc()
+    {
+        if (!IsServer) return;
+        // ใส่ชื่อฉาก GameOver ให้ตรงกับ Build Settings
+        NetworkManager.SceneManager.LoadScene("GameOver", UnityEngine.SceneManagement.LoadSceneMode.Single);
+    }
 }
