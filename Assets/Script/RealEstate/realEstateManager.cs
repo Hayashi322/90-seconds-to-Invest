@@ -49,7 +49,7 @@ public class RealEstateManager : NetworkBehaviour
         {
             Houses.Clear();
             for (int i = 0; i < initialPrices.Length; i++)
-                Houses.Add(new HouseRecordNet { price = initialPrices[i], ownerClientId = 0, forRent = false });
+                Houses.Add(new HouseRecordNet { price = initialPrices[i], ownerClientId = ulong.MaxValue, forRent = false });
 
             InvokeRepeating(nameof(ServerTickUpdatePricesAndRent), 3f, updateInterval);
         }
@@ -68,7 +68,7 @@ public class RealEstateManager : NetworkBehaviour
             h.price = Mathf.Clamp(h.price + delta, minPrice, maxPrice);
 
             // จ่ายค่าเช่าเฉพาะบ้านที่ "forRent" และมีเจ้าของ
-            if (h.ownerClientId != 0 && h.forRent &&
+            if (h.ownerClientId != ulong.MaxValue && h.forRent &&   ///////////////
                 NetworkManager.Singleton.ConnectedClients.TryGetValue(h.ownerClientId, out var cc) &&
                 cc.PlayerObject)
             {
@@ -81,13 +81,13 @@ public class RealEstateManager : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void BuyHouseServerRpc(int index, ServerRpcParams rpc = default)
+   public void BuyHouseServerRpc(int index, ServerRpcParams rpc = default)
     {
         if (!IsServer || index < 0 || index >= Houses.Count) return;
 
         var clientId = rpc.Receive.SenderClientId;
         var rec = Houses[index];
-        if (rec.ownerClientId != 0) return; // มีเจ้าของแล้ว
+        if (rec.ownerClientId != ulong.MaxValue) return; // มีเจ้าของแล้ว //////////
 
         if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var cc) || !cc.PlayerObject) return;
         var inv = cc.PlayerObject.GetComponent<InventoryManager>();
@@ -113,10 +113,17 @@ public class RealEstateManager : NetworkBehaviour
         if (inv == null) return;
 
         inv.cash.Value += rec.price;
-        rec.ownerClientId = 0;
+        rec.ownerClientId = ulong.MaxValue;      ///////////
         rec.forRent = false;
         Houses[index] = rec;
     }
+
+
+
+
+
+
+
 
     // ✅ ปล่อยเช่า/ยกเลิกปล่อยเช่า
     [ServerRpc(RequireOwnership = false)]

@@ -2111,7 +2111,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 173932269}
   m_Enabled: 1
-  m_Alpha: 0
+  m_Alpha: 1
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
@@ -9631,6 +9631,8 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   resultsSceneName: Results
   gameOverSceneName: GameOver
+  minConnectedPlayers: 2
+  waitForClientsTimeout: 15
   winnerName:
     m_InternalValue:
       utf8LengthInBytes: 0
@@ -24775,6 +24777,8 @@ MonoBehaviour:
   countdownText: {fileID: 706449350}
   roundText: {fileID: 504079358}
   taxPanel: {fileID: 1750195611}
+  minConnectedPlayers: 2
+  waitForClientsTimeout: 15
 --- !u!4 &2019207358
 Transform:
   m_ObjectHideFlags: 0

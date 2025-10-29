@@ -84,7 +84,7 @@ public class RealEstateUI : MonoBehaviour
         housePriceText.text = $"Price: {rec.price:N0}";
 
         string ownerLabel = "None";
-        if (rec.ownerClientId != 0)
+        if (rec.ownerClientId != ulong.MaxValue) ////////////////
         {
             ownerLabel = (NetworkManager.Singleton &&
                           NetworkManager.Singleton.LocalClientId == rec.ownerClientId)

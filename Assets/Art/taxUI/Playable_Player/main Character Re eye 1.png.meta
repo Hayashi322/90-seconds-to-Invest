@@ -153,6 +153,19 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
@@ -609,7 +622,27 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      main Character Re eye 1_0: -7279379767823127392
+      main Character Re eye 1_1: -3399759069604459764
+      main Character Re eye 1_10: -5498639798415822184
+      main Character Re eye 1_11: 44853405625840175
+      main Character Re eye 1_12: 4432317380439749183
+      main Character Re eye 1_13: 6274516947123084611
+      main Character Re eye 1_14: -3320153315274019400
+      main Character Re eye 1_15: 3672914383336570744
+      main Character Re eye 1_16: -1817545417248851033
+      main Character Re eye 1_17: 7969449307636950366
+      main Character Re eye 1_18: 1410929003137561902
+      main Character Re eye 1_19: -2430890239223888495
+      main Character Re eye 1_2: -1854737134777402305
+      main Character Re eye 1_3: -4466151256724429977
+      main Character Re eye 1_4: -4206631539019688693
+      main Character Re eye 1_5: -2374841450783701634
+      main Character Re eye 1_6: 8183628576600216883
+      main Character Re eye 1_7: -1985401157236894811
+      main Character Re eye 1_8: 6872080165056823792
+      main Character Re eye 1_9: 8119538521981667131
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
