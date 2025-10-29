@@ -83,9 +83,9 @@ public class Timer : NetworkBehaviour
         roundCount.Value++;
         switch (Phase)
         {
-            case 1: currentTime.Value = 1f; break;
-            case 2: currentTime.Value = 1f; break;
-            case 3: currentTime.Value = 1f; break;
+            case 1: currentTime.Value = 90f; break;
+            case 2: currentTime.Value = 60f; break;
+            case 3: currentTime.Value = 30f; break;
         }
         startTime.Value = NetworkManager.Singleton.ServerTime.Time;
 
