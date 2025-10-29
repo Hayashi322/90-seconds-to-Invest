@@ -15,7 +15,6 @@ public class MainMenu : MonoBehaviour
     public async void StartHost()
     {
         HostSingleton.Instance.CreateHost();
-
         // (ถ้ามี RelayJoinCodeDisplay อยู่ในฉาก มันจะ subscribe เองตอน OnEnable)
         await HostSingleton.Instance.GameManager.StartHostAsync();
         // หลังได้โค้ด อีเวนต์จะยิง → UI อัปเดตเอง
@@ -31,7 +30,7 @@ public class MainMenu : MonoBehaviour
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.ExitPlaymode();
 #else
-            Application.Quit();
+        Application.Quit();
 #endif
     }
 }

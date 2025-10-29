@@ -3,8 +3,8 @@ using UnityEngine;
 
 public class RelayJoinCodeDisplay : MonoBehaviour
 {
-    [SerializeField] private TMP_Text joinCodeText;     // ลาก TMP_Text มาวาง
-    [SerializeField] private GameObject panel;          // กล่องที่โชว์โค้ด (optional)
+    [SerializeField] private TMP_Text joinCodeText; // ลาก TMP_Text มาวาง
+    [SerializeField] private GameObject panel;      // กล่องที่โชว์โค้ด (optional)
 
     void OnEnable()
     {
@@ -12,6 +12,7 @@ public class RelayJoinCodeDisplay : MonoBehaviour
         if (host?.GameManager == null) return;
 
         host.GameManager.JoinCodeChanged += OnJoinCode;
+
         // เผื่อ Host สร้างเสร็จก่อนเปิด UI:
         var current = host.GameManager.JoinCode;
         if (!string.IsNullOrEmpty(current)) OnJoinCode(current);

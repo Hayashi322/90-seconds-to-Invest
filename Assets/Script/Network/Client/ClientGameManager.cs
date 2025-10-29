@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -13,17 +13,15 @@ public class ClientGameManager
 {
     private JoinAllocation allocation;
     private const string MenuSceneName = "MainMenu";
+
     public async Task<bool> InitAsync()
     {
         await UnityServices.InitializeAsync();
-
         AuthState authState = await AuthenticationWrapper.DoAuth();
-
         if (authState == AuthState.Authenticated)
         {
             return true;
         }
-
         return false;
     }
 
@@ -45,7 +43,6 @@ public class ClientGameManager
         }
 
         UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-
         RelayServerData relayServerData = allocation.ToRelayServerData("dtls");
         transport.SetRelayServerData(relayServerData);
 

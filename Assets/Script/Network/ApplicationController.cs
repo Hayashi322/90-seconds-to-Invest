@@ -1,10 +1,11 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using UnityEngine;
 
 public class ApplicationController : MonoBehaviour
 {
     [SerializeField] private ClientSingleton clientPrefab;
     [SerializeField] private HostSingleton hostPrefab;
+
     async void Start()
     {
         DontDestroyOnLoad(gameObject);
@@ -15,7 +16,6 @@ public class ApplicationController : MonoBehaviour
     {
         if (isDedicatedServer)
         {
-
         }
         else
         {
@@ -25,12 +25,10 @@ public class ApplicationController : MonoBehaviour
             ClientSingleton clientSingleton = Instantiate(clientPrefab);
             bool authenticated = await clientSingleton.CreateClient();
 
-
             if (authenticated)
             {
                 clientSingleton.GameManager.GoToMenu();
             }
         }
     }
-
 }

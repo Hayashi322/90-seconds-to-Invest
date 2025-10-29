@@ -1,23 +1,19 @@
-﻿using TMPro;
+﻿using UnityEngine;
+using TMPro;
 using Unity.Netcode;
-using UnityEngine;
 
 public class Timer : NetworkBehaviour
 {
     public static Timer Instance { get; private set; }
-    private void Awake()
-    {
-        if (Instance == null) Instance = this;
-        else { Destroy(gameObject); return; }
-    }
+    private void Awake() { if (Instance == null) Instance = this; else { Destroy(gameObject); return; } }
     private void OnDestroy() { if (Instance == this) Instance = null; }
 
-    // สถานะเวลาแบบเน็ตเวิร์ก
+    // networked time state
     private NetworkVariable<double> startTime = new(0, NetworkVariableReadPermission.Everyone);
     private NetworkVariable<int> roundCount = new(0, NetworkVariableReadPermission.Everyone);
     private NetworkVariable<float> currentTime = new(30f, NetworkVariableReadPermission.Everyone);
 
-    [Header("Optional Panels (Phase 1 Intro)")]
+    [Header("Optional Panels")]
     [SerializeField] private CanvasGroup[] introPanels;
 
     [Header("UI")]
@@ -35,18 +31,9 @@ public class Timer : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-        roundCount.OnValueChanged += (_, __) =>
-        {
-            UpdateRoundLabel();
-            ApplyIntroPanels();
-        };
-
+        roundCount.OnValueChanged += (_, __) => { UpdateRoundLabel(); ApplyIntroPanels(); };
         if (IsServer) StartCountdown();
-        else
-        {
-            UpdateRoundLabel();
-            ApplyIntroPanels();
-        }
+        else { UpdateRoundLabel(); ApplyIntroPanels(); }
     }
 
     private void Update()
@@ -63,27 +50,35 @@ public class Timer : NetworkBehaviour
         }
         else if (!timeUpTriggered)
         {
-            countdownText.text = "Time's up!";
+            countdownText.text = "X";
             timeUpTriggered = true;
-            if (IsServer) Invoke(nameof(StartCountdown), 2f);
+
+            if (IsServer)
+            {
+                // ครบ 9 เฟส (Round 3, Phase 3) → เปิดฉากสรุปผลก่อน
+                if (roundCount.Value >= 9)
+                {
+                    GameResultManager.Instance.CollectAndOpenResultsServer(); // ← โหลด "Results"
+                }
+                else
+                {
+                    Invoke(nameof(StartCountdown), 2f);
+                }
+            }
         }
     }
 
     private void StartCountdown()
     {
         roundCount.Value++;
-
-        // ตัวอย่างความยาวต่อเฟส
         switch (Phase)
         {
-            case 1: currentTime.Value = 90f; break; // วางแผน/สะสม
-            case 2: currentTime.Value = 60f; break; // เหตุการณ์ตลาด
-            case 3: currentTime.Value = 30f; break; // สรุป/ชำระภาษี
+            case 1: currentTime.Value = 90f; break;
+            case 2: currentTime.Value = 60f; break;
+            case 3: currentTime.Value = 30f; break;
         }
-
         startTime.Value = NetworkManager.Singleton.ServerTime.Time;
 
-        // Phase 3 → ให้ทุก client คำนวณบิลภาษี + เปิดหน้าภาษี
         if (Phase == 3) EnterPhase3ClientRpc();
         else ShowTaxUIClientRpc(false);
 
@@ -95,35 +90,24 @@ public class Timer : NetworkBehaviour
     private void UpdateRoundLabel()
     {
         if (!roundText) return;
-        roundText.text = $"{Round}                        {Phase}";
+        roundText.text = $"{Round}                         {Phase}";
     }
 
     private void ApplyIntroPanels()
     {
         if (introPanels == null || introPanels.Length == 0) return;
-
-        foreach (var c in introPanels)
-        {
-            if (!c) continue;
-            c.alpha = 0f; c.blocksRaycasts = false; c.interactable = false;
-        }
-
+        foreach (var cg in introPanels) { if (!cg) continue; cg.alpha = 0; cg.blocksRaycasts = false; cg.interactable = false; }
         if (Phase == 1 && introPanels[0])
         {
-            var cg = introPanels[0];
-            cg.alpha = 1f; cg.blocksRaycasts = true; cg.interactable = true;
+            var c = introPanels[0];
+            c.alpha = 1; c.blocksRaycasts = true; c.interactable = true;
             Invoke(nameof(CloseAllIntroPanels), 3f);
         }
     }
-
     public void CloseAllIntroPanels()
     {
         if (introPanels == null) return;
-        foreach (var c in introPanels)
-        {
-            if (!c) continue;
-            c.alpha = 0f; c.blocksRaycasts = false; c.interactable = false;
-        }
+        foreach (var c in introPanels) { if (!c) continue; c.alpha = 0; c.blocksRaycasts = false; c.interactable = false; }
     }
 
     // ===== Client RPCs =====
@@ -133,10 +117,5 @@ public class Timer : NetworkBehaviour
         if (TaxManager.Instance) TaxManager.Instance.CalculateTaxThisPhaseServerRpc();
         if (taxPanel) taxPanel.SetActive(true);
     }
-
-    [ClientRpc]
-    private void ShowTaxUIClientRpc(bool show)
-    {
-        if (taxPanel) taxPanel.SetActive(show);
-    }
+    [ClientRpc] private void ShowTaxUIClientRpc(bool show) { if (taxPanel) taxPanel.SetActive(show); }
 }

@@ -25,7 +25,7 @@ public class HostGameManager
             allocation = await RelayService.Instance.CreateAllocationAsync(MaxConnections);
             JoinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
             Debug.Log($"[Relay] JoinCode = {JoinCode}");
-            JoinCodeChanged?.Invoke(JoinCode);   // <-- แจ้ง UI
+            JoinCodeChanged?.Invoke(JoinCode); // <-- แจ้ง UI
         }
         catch (Exception e)
         {
