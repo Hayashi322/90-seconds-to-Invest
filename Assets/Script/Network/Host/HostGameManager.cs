@@ -12,20 +12,22 @@ public class HostGameManager
 {
     private Allocation allocation;
     private const int MaxConnections = 4;
-    private const string GameSceneName = "GameSceneNet";
+
+    // เดิมเป็น GameSceneNet
+    // private const string GameSceneName = "GameSceneNet";
+    private const string LobbySceneName = "LobbyScene";   // ✅ ชื่อซีนลอบบี้
 
     public string JoinCode { get; private set; } = string.Empty;
     public event Action<string> JoinCodeChanged;
 
     public async Task StartHostAsync()
     {
-        // (มี Initialize + Auth ตามที่แก้ไปก่อนหน้าแล้ว)
         try
         {
             allocation = await RelayService.Instance.CreateAllocationAsync(MaxConnections);
             JoinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
             Debug.Log($"[Relay] JoinCode = {JoinCode}");
-            JoinCodeChanged?.Invoke(JoinCode); // <-- แจ้ง UI
+            JoinCodeChanged?.Invoke(JoinCode);
         }
         catch (Exception e)
         {
@@ -38,6 +40,9 @@ public class HostGameManager
         transport.SetRelayServerData(relayServerData);
 
         NetworkManager.Singleton.StartHost();
-        NetworkManager.Singleton.SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
+
+        // ✅ ให้เข้า LobbyScene เป็น Network Scene แทน GameSceneNet
+        NetworkManager.Singleton.SceneManager.LoadScene(LobbySceneName, LoadSceneMode.Single);
     }
 }
+

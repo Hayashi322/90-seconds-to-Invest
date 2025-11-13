@@ -6,6 +6,7 @@ using Astar;
 using Graph;
 using UnityEngine;
 using Unity.Netcode;
+using UnityEngine.SceneManagement;
 
 public class HeroControllerNet : NetworkBehaviour
 {
@@ -21,6 +22,15 @@ public class HeroControllerNet : NetworkBehaviour
     [SerializeField] private float moveSpeed = 4f;
     [SerializeField] private float reachOffset = 0.05f;
 
+    [Header("Character Visual")]
+    [SerializeField] private SpriteRenderer bodyRenderer;   // ลาก SpriteRenderer ของตัวละครมา
+    [SerializeField] private Sprite[] characterSpritesInGame; // สไปรท์ 4 แบบในฉากเล่นจริง
+
+    // index ตัวละครที่เลือกมาจาก Lobby (-1 = ยังไม่ตั้งค่า)
+    public NetworkVariable<int> CharacterIndex = new NetworkVariable<int>(
+        -1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+
     public NetworkVariable<bool> PauseByUI = new NetworkVariable<bool>(
         false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
@@ -29,6 +39,9 @@ public class HeroControllerNet : NetworkBehaviour
     private int _currentPathIndex;
     private GameObject currentNode;
     private GameObject targetNode;
+
+    // สำหรับซ่อน/แสดงตัวละครตาม Scene
+    private SpriteRenderer _sr;
 
     private void Awake()
     {
@@ -43,20 +56,87 @@ public class HeroControllerNet : NetworkBehaviour
 #else
             waypointController = FindObjectOfType<WaypointController>();
 #endif
+
+        // หา SpriteRenderer ของตัวละคร
+        _sr = GetComponentInChildren<SpriteRenderer>();
+        if (!bodyRenderer) bodyRenderer = _sr;   // ใช้ตัวเดียวกัน ทั้งตอน lobby และเกมจริง
+
+    }
+
+    private void OnEnable()
+    {
+        SceneManager.activeSceneChanged += OnSceneChanged;
+        UpdateVisible();
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.activeSceneChanged -= OnSceneChanged;
+    }
+
+    private void OnSceneChanged(Scene oldScene, Scene newScene)
+    {
+        UpdateVisible();
+    }
+
+    /// <summary>
+    /// เห็นตัวละครเฉพาะตอนอยู่ใน GameSceneNet
+    /// </summary>
+    private void UpdateVisible()
+    {
+        if (_sr == null) return;
+
+        bool isGameScene = SceneManager.GetActiveScene().name == "GameSceneNet";
+        _sr.enabled = isGameScene;
     }
 
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
+
+        if (IsClient)
+        {
+            CharacterIndex.OnValueChanged += OnCharacterIndexChanged;
+            OnCharacterIndexChanged(-1, CharacterIndex.Value); // อัปเดตครั้งแรก
+        }
+
         if (IsOwner) LocalPlayerSpawned?.Invoke(this);
         if (IsServer) StartCoroutine(ServerInitAfterSpawn());
     }
 
     public override void OnNetworkDespawn()
     {
+        if (IsClient)
+            CharacterIndex.OnValueChanged -= OnCharacterIndexChanged;
+
         if (IsOwner) LocalPlayerDespawned?.Invoke();
         base.OnNetworkDespawn();
     }
+
+    private void OnCharacterIndexChanged(int prev, int current)
+    {
+        ApplyCharacterVisual(current);
+    }
+
+    private void ApplyCharacterVisual(int index)
+    {
+        if (!bodyRenderer) return;
+        if (index < 0 || index >= characterSpritesInGame.Length)
+        {
+            // ยังไม่เลือก หรือ index ผิด → จะไม่เปลี่ยนสไปรท์
+            return;
+        }
+
+        bodyRenderer.sprite = characterSpritesInGame[index];
+    }
+
+    // ให้ server เรียกตั้งค่า index
+    public void ServerSetCharacterIndex(int index)
+    {
+        if (!IsServer) return;
+        CharacterIndex.Value = index;
+    }
+
 
     private void FixedUpdate()
     {
@@ -161,6 +241,12 @@ public class HeroControllerNet : NetworkBehaviour
     // ---------- Init / Helpers ----------
     private IEnumerator ServerInitAfterSpawn()
     {
+        // ✅ รอจนกว่าจะโหลด GameSceneNet จริง ๆ
+        while (SceneManager.GetActiveScene().name != "GameSceneNet")
+        {
+            yield return null;
+        }
+
         float timeout = 8f, t = 0f;
         while (!EnsureWaypointsReady())
         {
@@ -211,7 +297,7 @@ public class HeroControllerNet : NetworkBehaviour
 
         var g = waypointController.GetWaypointGraph();
         var list = g?.GetAllNodes();
-        return (list != null && list.Count > 0); // << ไม่ยอมผ่านด้วย childCount อีกแล้ว
+        return (list != null && list.Count > 0);
     }
 
     private int GraphNodeCount()
@@ -257,7 +343,7 @@ public class HeroControllerNet : NetworkBehaviour
 #if UNITY_2023_1_OR_NEWER
         var opener = FindFirstObjectByType<OpenCanvas>(FindObjectsInactive.Include);
 #else
-    var opener = FindObjectOfType<OpenCanvas>(true);
+        var opener = FindObjectOfType<OpenCanvas>(true);
 #endif
         if (!opener)
         {

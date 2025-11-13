@@ -2,6 +2,7 @@
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class LobbyManager : NetworkBehaviour
 {
@@ -51,19 +52,39 @@ public class LobbyManager : NetworkBehaviour
         {
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+
+            // เมื่อ LobbyManager spawn ขึ้นมา ให้เพิ่ม client ที่เชื่อมอยู่แล้วเข้าลิสต์ทันที
+            foreach (var clientId in NetworkManager.Singleton.ConnectedClientsIds)
+            {
+                OnClientConnected(clientId);
+            }
+        }
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        base.OnNetworkDespawn();
+
+        if (IsServer && NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
         }
 
-        // client ส่งชื่อเริ่มต้นให้ server
-        if (IsClient && IsOwner)
-        {
-            var name = PlayerPrefs.GetString("player_name", $"P{OwnerClientId}");
-            SetNameServerRpc(name);
-        }
+        players = null;
+        if (Instance == this) Instance = null;
     }
 
     private void OnClientConnected(ulong clientId)
     {
         if (!IsServer) return;
+
+        // กันไม่ให้ใส่ซ้ำ
+        for (int i = 0; i < players.Count; i++)
+        {
+            if (players[i].clientId == clientId)
+                return;
+        }
 
         var ps = new PlayerStateNet
         {
@@ -80,8 +101,13 @@ public class LobbyManager : NetworkBehaviour
         if (!IsServer) return;
 
         for (int i = players.Count - 1; i >= 0; i--)
+        {
             if (players[i].clientId == clientId)
+            {
+                // ลบออกจากลิสต์ → ตัวละครที่เขาเลือกจะถูกคืนให้ว่างอัตโนมัติ
                 players.RemoveAt(i);
+            }
+        }
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -95,7 +121,6 @@ public class LobbyManager : NetworkBehaviour
             {
                 var p = players[i];
                 p.playerName = (FixedString32Bytes)(string.IsNullOrWhiteSpace(name) ? $"P{cid}" : name.Trim());
-                p.characterIndex = p.characterIndex; // no-op แค่ชัดเจน
                 players[i] = p;
                 break;
             }
@@ -109,10 +134,12 @@ public class LobbyManager : NetworkBehaviour
 
         if (characterNames == null || charIndex < 0 || charIndex >= characterNames.Length) return;
 
-        // ห้ามซ้ำ
+        // ห้ามซ้ำ (ยกเว้นคนเดิมเลือกตัวเดิม)
         for (int i = 0; i < players.Count; i++)
+        {
             if (players[i].characterIndex == charIndex && players[i].clientId != cid)
                 return;
+        }
 
         for (int i = 0; i < players.Count; i++)
         {
@@ -120,11 +147,28 @@ public class LobbyManager : NetworkBehaviour
             {
                 var p = players[i];
                 p.characterIndex = charIndex;
-                p.ready = false; // เปลี่ยนตัวละครแล้วไม่พร้อม
+                p.ready = false; // เปลี่ยนตัวละครแล้วให้ไม่พร้อม
                 players[i] = p;
+
+                // ส่งตัวละครไปให้ HeroControllerNet ของ player นี้ใช้ในเกมจริง
+                ApplyCharacterToHero(cid, charIndex);
                 break;
             }
         }
+    }
+
+    private void ApplyCharacterToHero(ulong clientId, int charIndex)
+    {
+        if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
+            return;
+
+        var playerObj = client.PlayerObject;
+        if (!playerObj) return;
+
+        var hero = playerObj.GetComponent<HeroControllerNet>();
+        if (!hero) return;
+
+        hero.ServerSetCharacterIndex(charIndex);
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -137,11 +181,17 @@ public class LobbyManager : NetworkBehaviour
             if (players[i].clientId == cid)
             {
                 var p = players[i];
-                if (p.characterIndex >= 0) p.ready = ready; // ต้องเลือกตัวละครก่อน
+
+                // ต้องเลือกตัวละครก่อนถึงจะ Ready ได้
+                if (p.characterIndex >= 0)
+                    p.ready = ready;
+
                 players[i] = p;
                 break;
             }
         }
+
+        TryStartGame();
     }
 
     public bool AllReady()
@@ -149,9 +199,20 @@ public class LobbyManager : NetworkBehaviour
         if (players == null || players.Count == 0) return false;
 
         for (int i = 0; i < players.Count; i++)
+        {
             if (players[i].characterIndex < 0 || !players[i].ready)
                 return false;
+        }
 
         return true;
+    }
+
+    private void TryStartGame()
+    {
+        if (!IsServer) return;
+        if (!AllReady()) return;
+
+        Debug.Log("[Lobby] All players ready → Loading GameSceneNet");
+        NetworkManager.SceneManager.LoadScene("GameSceneNet", LoadSceneMode.Single);
     }
 }
