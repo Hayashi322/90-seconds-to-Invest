@@ -21,6 +21,10 @@ public class Timer : NetworkBehaviour
     [SerializeField] private TextMeshProUGUI countdownText;
     [SerializeField] private TextMeshProUGUI roundText;
 
+    [Header("Round Canvas")]
+    [SerializeField] private TextMeshProUGUI RoundText;
+    [SerializeField] private TextMeshProUGUI PhaseText;
+
     [Header("Tax UI Panel (has TaxUI)")]
     [SerializeField] private GameObject taxPanel;
 
@@ -107,12 +111,19 @@ public class Timer : NetworkBehaviour
     {
         if (introPanels == null || introPanels.Length == 0) return;
         foreach (var cg in introPanels) { if (!cg) continue; cg.alpha = 0; cg.blocksRaycasts = false; cg.interactable = false; }
-        if (Phase == 1 && introPanels[0])
+        if (Phase == 1 && introPanels[0] && Round == 1)
+          { 
+            return;
+          }
+        else 
         {
-            var c = introPanels[0];
-            c.alpha = 1; c.blocksRaycasts = true; c.interactable = true;
-            Invoke(nameof(CloseAllIntroPanels), 3f);
+        var c = introPanels[0];
+        c.alpha = 1; c.blocksRaycasts = true; c.interactable = true;
+        RoundText.text = Round.ToString();
+        PhaseText.text = Phase.ToString();
+        Invoke(nameof(CloseAllIntroPanels), 3f); 
         }
+        
     }
     public void CloseAllIntroPanels()
     {
