@@ -3401,6 +3401,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waypointNode: {fileID: 1144996007}
+  hoverScaleMultiplier: 1.1
+  scaleSpeed: 10
 --- !u!114 &230638078
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4236,6 +4238,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waypointNode: {fileID: 1710561485}
+  hoverScaleMultiplier: 1.1
+  scaleSpeed: 10
 --- !u!114 &267796263
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6291,6 +6295,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waypointNode: {fileID: 1211068860}
+  hoverScaleMultiplier: 1.1
+  scaleSpeed: 10
 --- !u!114 &372622080
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8551,6 +8557,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waypointNode: {fileID: 1649504019}
+  hoverScaleMultiplier: 1.1
+  scaleSpeed: 10
 --- !u!114 &478004836
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14639,6 +14647,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waypointNode: {fileID: 720751509}
+  hoverScaleMultiplier: 1.1
+  scaleSpeed: 10
 --- !u!114 &763275411
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23524,7 +23534,7 @@ Transform:
   m_GameObject: {fileID: 1322725995}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.92, y: 2.89, z: 0.04695071}
+  m_LocalPosition: {x: 2.01, y: 2.89, z: 0.04695071}
   m_LocalScale: {x: 0.3, y: 0.3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -23646,6 +23656,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waypointNode: {fileID: 380376298}
+  hoverScaleMultiplier: 1.1
+  scaleSpeed: 10
 --- !u!114 &1322726000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27963,6 +27975,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waypointNode: {fileID: 1687941044}
+  hoverScaleMultiplier: 1.1
+  scaleSpeed: 10
 --- !u!114 &1598282821
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -28606,7 +28620,7 @@ Transform:
   m_GameObject: {fileID: 1634924453}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 9.33, y: -0.51, z: 0.04695071}
+  m_LocalPosition: {x: 9.36, y: -0.27, z: 0.04695071}
   m_LocalScale: {x: 0.25, y: 0.3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -28728,6 +28742,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waypointNode: {fileID: 820659124}
+  hoverScaleMultiplier: 1.1
+  scaleSpeed: 10
 --- !u!114 &1634924458
 MonoBehaviour:
   m_ObjectHideFlags: 0

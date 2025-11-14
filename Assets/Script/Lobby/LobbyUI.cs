@@ -10,7 +10,7 @@ public class LobbyUI : MonoBehaviour
     public LobbyManager lobby;
 
     [Header("Left Slots (4 ช่อง)")]
-    public Image[] slotPortraits;              // รูปตัวละคร
+    public Image[] slotPortraits;              // รูปตัวละครในช่องซ้าย
     public TextMeshProUGUI[] slotNameTexts;    // ชื่อผู้เล่น
     public TextMeshProUGUI[] slotStateTexts;   // สถานะพร้อม
 
@@ -28,11 +28,22 @@ public class LobbyUI : MonoBehaviour
     [Header("Hint")]
     public TextMeshProUGUI lobbyHintText;      // ข้อความแนะนำด้านบน
 
+    // ✅ เก็บรูป default ของแต่ละช่อง (ที่เซ็ตในอินสเปกเตอร์)
+    private Sprite[] initialSlotSprites;
+
     private void Start()
     {
         if (!lobby) lobby = LobbyManager.Instance;
 
-        // ✅ ส่งชื่อของเราขึ้นไปให้ server อัปเดตใน players list
+        // เก็บรูป default ของ slotPortraits ทั้งหมด (ตามที่ตั้งค่าไว้ใน Inspector)
+        initialSlotSprites = new Sprite[slotPortraits.Length];
+        for (int i = 0; i < slotPortraits.Length; i++)
+        {
+            if (slotPortraits[i])
+                initialSlotSprites[i] = slotPortraits[i].sprite;
+        }
+
+        // ส่งชื่อของเราขึ้นไปให้ server อัปเดตใน players list
         SendMyNameToServer();
 
         // map ปุ่มเลือกตัวละคร
@@ -91,51 +102,53 @@ public class LobbyUI : MonoBehaviour
     {
         if (!lobby || lobby.players == null) return;
 
-        // ช่องซ้าย (Player Slots)
+        // ===== ช่องซ้าย (Player Slots) =====
         for (int i = 0; i < slotPortraits.Length; i++)
         {
             if (i < lobby.players.Count)
             {
                 var p = lobby.players[i];
 
-                // รูป
+                // --- รูป ---
                 if (slotPortraits[i])
                 {
                     if (p.characterIndex >= 0 && p.characterIndex < characterSprites.Length)
                     {
+                        // เลือกตัวละครแล้ว → ใช้รูปตัวนั้น
                         slotPortraits[i].sprite = characterSprites[p.characterIndex];
-                        slotPortraits[i].color = Color.white;
                     }
                     else
                     {
-                        slotPortraits[i].sprite = null;
-                        slotPortraits[i].color = new Color(1, 1, 1, 0.2f);
+                        // ยังไม่เลือกตัวละคร → ใช้รูป default ของช่องนั้น (ตั้งค่าใน Inspector)
+                        slotPortraits[i].sprite = initialSlotSprites[i];
                     }
+
+                    slotPortraits[i].color = Color.white;
                 }
 
-                // ชื่อ
+                // --- ชื่อ ---
                 if (slotNameTexts[i]) slotNameTexts[i].text = p.playerName.ToString();
 
-                // สถานะ
+                // --- สถานะ ---
                 if (slotStateTexts[i])
                 {
                     slotStateTexts[i].text = p.ready ? "พร้อม" : "ยังไม่พร้อม";
-                    
                 }
             }
             else
             {
+                // ช่องที่ยังไม่มีผู้เล่นเลย
                 if (slotPortraits[i])
                 {
-                    slotPortraits[i].sprite = null;
-                    slotPortraits[i].color = new Color(1, 1, 1, 0.1f);
+                    slotPortraits[i].sprite = initialSlotSprites[i];
+                    slotPortraits[i].color = new Color(1f, 1f, 1f, 0.2f); // จางลงนิดนึงให้รู้ว่ายังว่าง
                 }
-                if (slotNameTexts[i]) slotNameTexts[i].text = "-";
+                if (slotNameTexts[i]) slotNameTexts[i].text = "กำลังรอผู้เล่น";
                 if (slotStateTexts[i]) slotStateTexts[i].text = "";
             }
         }
 
-        // ปุ่มพร้อม
+        // ===== ปุ่มพร้อม (Ready Button) =====
         var me = FindMe();
         if (readyButtonText)
         {
@@ -151,7 +164,8 @@ public class LobbyUI : MonoBehaviour
             readyButton.interactable = canReady;
         }
 
-        // ปุ่มตัวละคร: disable ถ้าถูกคนอื่นจอง (ยกเว้นเป็นตัวที่เราเลือกอยู่เอง)
+        // ===== ปุ่มตัวละครด้านขวา =====
+        // disable ถ้าถูกคนอื่นจอง (ยกเว้นเป็นตัวที่เราเลือกเอง)
         for (int i = 0; i < characterButtons.Length; i++)
         {
             bool taken = false;
@@ -169,7 +183,7 @@ public class LobbyUI : MonoBehaviour
                 characterButtons[i].interactable = !taken || (me.HasValue && me.Value.characterIndex == i);
         }
 
-        // ข้อความแนะนำ
+        // ===== ข้อความแนะนำด้านบน =====
         if (lobbyHintText)
         {
             lobbyHintText.text = lobby.AllReady()
@@ -177,6 +191,7 @@ public class LobbyUI : MonoBehaviour
                 : "เลือกตัวละคร";
         }
     }
+
     private void SendMyNameToServer()
     {
         if (!lobby) return;
