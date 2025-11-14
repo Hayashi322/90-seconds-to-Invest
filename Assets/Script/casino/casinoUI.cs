@@ -142,7 +142,7 @@ public class casinoUI : MonoBehaviour
 
         if (dice1) dice1.text = r.dice1.ToString("F0");
         if (dice2) dice2.text = r.dice2.ToString("F0");
-        if (result) result.text = r.win ? "เอ็งชนะ" : "เอ็งแพ้";
+        if (result) result.text = r.win ? "คุณชนะ" : "คุณแพ้";
     }
 
     // Quick-select bet amount
