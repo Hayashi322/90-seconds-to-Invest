@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 3297763546898020489}
   - component: {fileID: 6321895349801597540}
   - component: {fileID: 3814985731636129450}
+  - component: {fileID: 674620336211254000}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -226,4 +227,25 @@ MonoBehaviour:
   taxableBase:
     m_InternalValue: 0
   effectiveRate:
+    m_InternalValue: 0
+--- !u!114 &674620336211254000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8201279591057362410}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b4c3bcd9ecd91f428ab9a5d2383f0c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  HasCrime:
+    m_InternalValue: 0
+  CrimeExpireTime:
+    m_InternalValue: 0
+  IsInJail:
+    m_InternalValue: 0
+  JailReleaseTime:
     m_InternalValue: 0

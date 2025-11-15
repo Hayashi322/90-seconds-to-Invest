@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 9a53754fd942f3e49819ef7e3c8d18f7
+guid: a5eda6ccc4e426943b1ee96f057cd048
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 8269346052127698452
-    second: 8bcd8aa37103ed95_0
+      213: 3139160386538342262
+    second: behindbarPolice_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 8bcd8aa37103ed95_0
+      name: behindbarPolice_0
       rect:
         serializedVersion: 2
-        x: 29
-        y: 56
-        width: 887
-        height: 803
+        x: 152
+        y: 305
+        width: 271
+        height: 165
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 41ea9d9eb6e92c270800000000000000
-      internalID: 8269346052127698452
+      spriteID: 67788945db9809b20800000000000000
+      internalID: 3139160386538342262
       vertices: []
       indices: 
       edges: []

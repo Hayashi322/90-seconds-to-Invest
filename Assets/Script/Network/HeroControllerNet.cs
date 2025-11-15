@@ -23,25 +23,25 @@ public class HeroControllerNet : NetworkBehaviour
     [SerializeField] private float reachOffset = 0.05f;
 
     [Header("Character Visual")]
-    [SerializeField] private SpriteRenderer bodyRenderer;   // ลาก SpriteRenderer ของตัวละครมา
-    [SerializeField] private Sprite[] characterSpritesInGame; // สไปรท์ 4 แบบในฉากเล่นจริง
+    [SerializeField] private SpriteRenderer bodyRenderer;
+    [SerializeField] private Sprite[] characterSpritesInGame;
 
-    // index ตัวละครที่เลือกมาจาก Lobby (-1 = ยังไม่ตั้งค่า)
     public NetworkVariable<int> CharacterIndex = new NetworkVariable<int>(
         -1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
-
+    // ตอนนี้ไม่ได้ใช้บล็อกเดินแล้ว แต่เก็บไว้เผื่อ debug
     public NetworkVariable<bool> PauseByUI = new NetworkVariable<bool>(
-        false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+        false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
-    // server runtime
     private List<GameObject> pathWay;
     private int _currentPathIndex;
     private GameObject currentNode;
     private GameObject targetNode;
 
-    // สำหรับซ่อน/แสดงตัวละครตาม Scene
     private SpriteRenderer _sr;
+
+    // ใช้เช็คคุก
+    private PlayerLawState lawState;
 
     private void Awake()
     {
@@ -57,10 +57,8 @@ public class HeroControllerNet : NetworkBehaviour
             waypointController = FindObjectOfType<WaypointController>();
 #endif
 
-        // หา SpriteRenderer ของตัวละคร
         _sr = GetComponentInChildren<SpriteRenderer>();
-        if (!bodyRenderer) bodyRenderer = _sr;   // ใช้ตัวเดียวกัน ทั้งตอน lobby และเกมจริง
-
+        if (!bodyRenderer) bodyRenderer = _sr;
     }
 
     private void OnEnable()
@@ -79,9 +77,6 @@ public class HeroControllerNet : NetworkBehaviour
         UpdateVisible();
     }
 
-    /// <summary>
-    /// เห็นตัวละครเฉพาะตอนอยู่ใน GameSceneNet
-    /// </summary>
     private void UpdateVisible()
     {
         if (_sr == null) return;
@@ -94,10 +89,12 @@ public class HeroControllerNet : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
+        lawState = GetComponent<PlayerLawState>();
+
         if (IsClient)
         {
             CharacterIndex.OnValueChanged += OnCharacterIndexChanged;
-            OnCharacterIndexChanged(-1, CharacterIndex.Value); // อัปเดตครั้งแรก
+            OnCharacterIndexChanged(-1, CharacterIndex.Value);
         }
 
         if (IsOwner) LocalPlayerSpawned?.Invoke(this);
@@ -121,34 +118,51 @@ public class HeroControllerNet : NetworkBehaviour
     private void ApplyCharacterVisual(int index)
     {
         if (!bodyRenderer) return;
-        if (index < 0 || index >= characterSpritesInGame.Length)
-        {
-            // ยังไม่เลือก หรือ index ผิด → จะไม่เปลี่ยนสไปรท์
-            return;
-        }
-
+        if (index < 0 || index >= characterSpritesInGame.Length) return;
         bodyRenderer.sprite = characterSpritesInGame[index];
     }
 
-    // ให้ server เรียกตั้งค่า index
     public void ServerSetCharacterIndex(int index)
     {
         if (!IsServer) return;
         CharacterIndex.Value = index;
     }
 
-
     private void FixedUpdate()
     {
         if (!IsServer) return;
-        if (PauseByUI.Value) return;
+
+        // ยังให้คุกหยุดเดินปกติ
+        if (lawState != null && lawState.IsInJail.Value)
+            return;
+
+        // ไม่ใช้ PauseByUI บล็อกเดินแล้ว
+        // if (PauseByUI.Value) return;
+
         PathTraversalServer();
     }
 
-    // ---------- Owner API ----------
+    public void ServerResetPathAfterTeleport()
+    {
+        if (!IsServer) return;
+
+        pathWay = null;
+        _currentPathIndex = 0;
+        currentNode = null;
+        targetNode = null;
+
+        Debug.Log("[HeroControllerNet] Reset path & current node after teleport.");
+    }
+
     public void SetUIOpen(bool isOpen)
     {
         if (!IsOwner) return;
+        SetUIOpenServerRpc(isOpen);
+    }
+
+    [ServerRpc]
+    private void SetUIOpenServerRpc(bool isOpen)
+    {
         PauseByUI.Value = isOpen;
     }
 
@@ -158,7 +172,6 @@ public class HeroControllerNet : NetworkBehaviour
         SetDestinationServerRpc(waypointId);
     }
 
-    // ---------- Server authority ----------
     [ServerRpc]
     private void SetDestinationServerRpc(int waypointId)
     {
@@ -172,7 +185,6 @@ public class HeroControllerNet : NetworkBehaviour
         var graph = waypointController.GetWaypointGraph();
         var nodes = graph.GetAllNodes();
 
-        // ใช้โหนด “ตัวจริงในกราฟ” เท่านั้น
         var startGo = currentNode ?? waypointController.GetClosestGraphNode(transform.position);
         var goalGo = waypointController.GetGraphNodeById(waypointId);
 
@@ -189,6 +201,27 @@ public class HeroControllerNet : NetworkBehaviour
         currentNode = startGo;
         targetNode = goalGo;
 
+        // ⭐ กรณีคลิกที่ node เดิม (เช่น ยืนอยู่ที่ policeWaypoint แล้วคลิกซ้ำ)
+        if (currentNode == targetNode)
+        {
+            int canvasNumber = ComputeCanvasNumberFromNode(currentNode);
+            if (canvasNumber >= 0)
+            {
+                var sendParams = new ClientRpcParams
+                {
+                    Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { OwnerClientId } }
+                };
+                OpenCanvasClientRpc(canvasNumber, sendParams);
+                Debug.Log($"[HeroControllerNet] Immediate open canvas {canvasNumber} at node {currentNode.name} (start==goal).");
+            }
+
+            // ไม่ต้องเดิน ใช้แค่นี้พอ
+            pathWay = null;
+            _currentPathIndex = 0;
+            return;
+        }
+
+        // ปกติ: start != goal → ใช้ A* เดินไป
         pathWay = AStar.FindPath(graph, currentNode, targetNode);
         if (pathWay != null && pathWay.Count > 0)
         {
@@ -208,7 +241,8 @@ public class HeroControllerNet : NetworkBehaviour
         if (_currentPathIndex < 0 || _currentPathIndex >= pathWay.Count)
         {
             Debug.LogError($"[HeroControllerNet] Path index OOR: {_currentPathIndex}");
-            pathWay = null; return;
+            pathWay = null;
+            return;
         }
 
         var nextNode = pathWay[_currentPathIndex];
@@ -238,10 +272,8 @@ public class HeroControllerNet : NetworkBehaviour
         }
     }
 
-    // ---------- Init / Helpers ----------
     private IEnumerator ServerInitAfterSpawn()
     {
-        // ✅ รอจนกว่าจะโหลด GameSceneNet จริง ๆ
         while (SceneManager.GetActiveScene().name != "GameSceneNet")
         {
             yield return null;
@@ -259,7 +291,6 @@ public class HeroControllerNet : NetworkBehaviour
             yield return null;
         }
 
-        // แปลง startWaypoint (ถ้ามี) เป็นโหนดในกราฟ
         GameObject startFromGraph = null;
         if (startWaypoint)
         {
@@ -267,7 +298,6 @@ public class HeroControllerNet : NetworkBehaviour
             var wid = startWaypoint.GetComponent<WaypointId>();
             if (wid) id = wid.Id;
             else if (int.TryParse(startWaypoint.name, out var n)) id = n;
-
             if (id >= 0) startFromGraph = waypointController.GetGraphNodeById(id);
         }
 
@@ -284,7 +314,6 @@ public class HeroControllerNet : NetworkBehaviour
         }
     }
 
-    // กราฟต้อง “มีโหนด” เท่านั้นถึงจะพร้อม
     private bool EnsureWaypointsReady()
     {
         if (!waypointController)
@@ -350,6 +379,6 @@ public class HeroControllerNet : NetworkBehaviour
             Debug.LogWarning("[HeroControllerNet] OpenCanvas not found in scene.");
             return;
         }
-        opener.openCanvas(canvasNum); // จะ pause/บังคลิก/แจ้ง SetUIOpen(true) ให้เอง
+        opener.openCanvas(canvasNum);
     }
 }

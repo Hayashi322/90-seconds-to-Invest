@@ -3,7 +3,6 @@ using TMPro;
 using System.Collections;
 using Unity.Netcode;
 using UnityEngine.UI;
-// using Game.Economy; // ถ้าไม่ได้ใช้ให้ลบได้
 
 public class casinoUI : MonoBehaviour
 {
@@ -19,8 +18,8 @@ public class casinoUI : MonoBehaviour
     [SerializeField] private Button[] BetButton;
 
     [Header("Enter Message")]
-    [SerializeField] private TextMeshProUGUI enterMessageText;   // ← ลาก Text TMP สำหรับโชว์ข้อความเข้า UI
-    [SerializeField] private float enterMessageDuration = 3f;    // ระยะเวลาที่แสดงข้อความ (วินาที)
+    [SerializeField] private TextMeshProUGUI enterMessageText;
+    [SerializeField] private float enterMessageDuration = 3f;
 
     [Header("Bet")]
     [SerializeField] private int cost = 10000;
@@ -30,21 +29,21 @@ public class casinoUI : MonoBehaviour
     [SerializeField] private bool lowOdd = false;
 
     private InventoryManager inv;
+    private PlayerLawState lawState;
 
     private void OnEnable()
     {
         SetInteractable(false);
         StartCoroutine(BindLocalInventory());
 
-        // แสดงข้อความเมื่อเข้าหน้านี้
+        // ข้อความตอนเข้า
         if (enterMessageText)
         {
-            StopAllCoroutines();                    // กันเคสเปิด/ปิดซ้ำเร็ว ๆ
+            StopAllCoroutines();
             StartCoroutine(ShowEnterMessage());
         }
         else
         {
-            // ถ้าไม่ได้เซ็ตช่องไว้ ใช้ result แทนชั่วคราว
             if (result) StartCoroutine(ShowTempOn(result));
         }
     }
@@ -56,7 +55,6 @@ public class casinoUI : MonoBehaviour
 
         yield return new WaitForSeconds(enterMessageDuration);
 
-        // เคลียร์ข้อความหลังครบเวลา
         enterMessageText.text = "";
         enterMessageText.gameObject.SetActive(false);
     }
@@ -97,8 +95,16 @@ public class casinoUI : MonoBehaviour
         inv.CasinoResultReceived += OnCasinoResult;
         inv.cash.OnValueChanged += OnCashChanged;
 
+        lawState = localObj.GetComponent<PlayerLawState>();
+
         OnCashChanged(inv.cash.Value, inv.cash.Value);
         SetInteractable(true);
+
+        // แจ้งว่า "เข้า" คาสิโน แล้ว
+        if (lawState != null && lawState.IsOwner)
+        {
+            lawState.EnterCasinoServerRpc();
+        }
     }
 
     private void SetInteractable(bool canUse)
@@ -121,7 +127,12 @@ public class casinoUI : MonoBehaviour
             bet = custom;
 
         inv.PlaceBetServerRpc(bet, ResolveChoice());
-        // if (result) result.text = "Rolling...";
+
+        // แจ้งว่ามีการ Roll → นับว่าเริ่มทำผิด
+        if (lawState != null && lawState.IsOwner)
+        {
+            lawState.NotifyCasinoRollServerRpc();
+        }
     }
 
     private BetChoice ResolveChoice()
@@ -180,5 +191,16 @@ public class casinoUI : MonoBehaviour
     {
         for (int j = 0; j < PriceButton.Length; j++)
             PriceButton[j].image.color = (j == clickedIndex) ? Color.gray : Color.white;
+    }
+
+    // ปุ่มปิดคาสิโน → ให้ผูกจาก Button OnClick
+    public void OnClickCloseCasino()
+    {
+        if (lawState != null && lawState.IsOwner)
+        {
+            lawState.ExitCasinoServerRpc();
+        }
+
+        gameObject.SetActive(false);
     }
 }

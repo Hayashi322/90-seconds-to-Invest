@@ -5,6 +5,9 @@ using Unity.Netcode;
 
 public class OpenCanvas : MonoBehaviour
 {
+    // ✅ ใช้เป็น singleton สำหรับเรียกจากที่อื่น
+    public static OpenCanvas Instance { get; private set; }
+
     [Header("Canvas Groups (auto-fill if empty)")]
     [SerializeField] private CanvasGroup[] canvases;
 
@@ -18,8 +21,8 @@ public class OpenCanvas : MonoBehaviour
     [SerializeField] private bool closeWithEsc = true;
     [SerializeField] private bool pauseWithTimescale = false;
     [SerializeField, Range(0f, 1f)] private float fadeAlpha = 1f;
-    [SerializeField] private bool bringToFront = true;        // ดันขึ้นหน้าสุด
-    [SerializeField] private int sortingOrderOnOpen = 1000;   // ถ้า bringToFront = true
+    [SerializeField] private bool bringToFront = true;
+    [SerializeField] private int sortingOrderOnOpen = 1000;
 
     [Header("Events")]
     public UnityEvent<int> OnOpenIndex;
@@ -31,9 +34,25 @@ public class OpenCanvas : MonoBehaviour
     // ---------- Unity lifecycle ----------
     private void Awake()
     {
+        // ตั้งค่า singleton
+        if (Instance != null && Instance != this)
+        {
+            Debug.LogWarning("[OpenCanvas] Multiple instances found, keeping the first one.");
+        }
+        else
+        {
+            Instance = this;
+        }
+
         TryAutoFillCanvases();
         TryAutoBindOwner();
         InitAllClosed();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 
 #if UNITY_EDITOR
@@ -52,6 +71,7 @@ public class OpenCanvas : MonoBehaviour
     }
 
     // ---------- Public API ----------
+
     /// <summary>เปิดแผงตาม index ในอาเรย์ canvases</summary>
     public void openCanvas(int number)
     {
@@ -63,24 +83,20 @@ public class OpenCanvas : MonoBehaviour
             return;
         }
 
-        if (_current == number)
-        {
-            // เปิดซ้ำก็ไม่ต้องทำอะไร
-            Debug.Log($"[OpenCanvas] already open index={number} ({canvases[number]?.name})");
-            return;
-        }
+        bool reopen = (_current == number);
 
+        // ไม่ return แล้ว ถึงจะเป็น index เดิมก็ re-open ซ้ำได้
         ShowOnly(number);
 
-        controllerNet?.SetUIOpen(true);             // ล็อกการเดิน/อินพุตโลก
+        controllerNet?.SetUIOpen(true);
         if (blockRaycast) blockRaycast.SetActive(true);
         if (pauseWithTimescale) Time.timeScale = 0f;
 
         OnOpenIndex?.Invoke(number);
-        Debug.Log($"[OpenCanvas] OPEN index={number} name={canvases[number]?.name}");
+        Debug.Log($"[OpenCanvas] {(reopen ? "REOPEN" : "OPEN")} index={number} name={canvases[number]?.name}");
     }
 
-    /// <summary>ปิดทุกแผง</summary>
+    /// <summary>ปิดทุกแผง (ใช้กับปุ่ม Close)</summary>
     public void closeCanvas() => CloseAllUI();
 
     /// <summary>เปิดตามชื่อ GameObject ของแผง (เช่น “BankPanel”)</summary>
@@ -94,7 +110,11 @@ public class OpenCanvas : MonoBehaviour
     /// <summary>เปิดโดยแมป waypointId -> index</summary>
     public void OpenByWaypointId(int waypointId, Func<int, int> mapIdToIndex)
     {
-        if (mapIdToIndex == null) { Debug.LogWarning("[OpenCanvas] mapIdToIndex is null"); return; }
+        if (mapIdToIndex == null)
+        {
+            Debug.LogWarning("[OpenCanvas] mapIdToIndex is null");
+            return;
+        }
         int idx = mapIdToIndex.Invoke(waypointId);
         if (idx >= 0) openCanvas(idx);
         else Debug.LogWarning($"[OpenCanvas] map returned invalid index for waypoint {waypointId}");
@@ -147,46 +167,47 @@ public class OpenCanvas : MonoBehaviour
         {
             var cg = canvases[i];
             if (!cg) continue;
-            bool active = (i == index);
 
-            if (!active)
-            {
-                cg.alpha = 0f;
-                cg.blocksRaycasts = false;
-                cg.interactable = false;
-                if (cg.gameObject.activeSelf) cg.gameObject.SetActive(false);
-            }
+            if (i == index) continue;
+
+            cg.alpha = 0f;
+            cg.blocksRaycasts = false;
+            cg.interactable = false;
+            if (cg.gameObject.activeSelf) cg.gameObject.SetActive(false);
         }
 
-        // เป้า
         var target = canvases[index];
-        if (!target) { _current = -1; return; }
+        if (!target)
+        {
+            _current = -1;
+            return;
+        }
 
-        // 1) เปิดพาเรนต์ทุกชั้น + เคลียร์ CanvasGroup บนพาเรนต์
         ForceEnableHierarchy(target.gameObject);
 
-        // 2) บังคับเปิด/คลิกได้
         target.gameObject.SetActive(true);
         target.alpha = fadeAlpha;
         target.blocksRaycasts = true;
         target.interactable = true;
 
-        // 3) ดันขึ้นหน้าสุด (ลูปทุก Canvas ในสายพาเรนต์)
-        var canvList = target.GetComponentsInParent<Canvas>(true);
-        foreach (var c in canvList)
+        if (bringToFront)
         {
-            c.enabled = true;
-            c.overrideSorting = true;
-            if (c.sortingOrder < 1000) c.sortingOrder = 1000; // กันโดนบัง
+            var canvasesInParents = target.GetComponentsInParent<Canvas>(true);
+            foreach (var c in canvasesInParents)
+            {
+                c.enabled = true;
+                c.overrideSorting = true;
+                if (c.sortingOrder < sortingOrderOnOpen)
+                    c.sortingOrder = sortingOrderOnOpen;
+            }
         }
 
-        // 4) เผื่อโดนเลื่อนตำแหน่ง/ขนาดจนหลุดจอ → รีเซ็ตให้อยู่กลาง
         var rt = target.GetComponent<RectTransform>();
         if (rt)
         {
-            rt.SetAsLastSibling(); // ดัน sibling ขึ้นบนใน Canvas เดียวกัน
+            rt.SetAsLastSibling();
             if (Mathf.Abs(rt.anchoredPosition.x) > 10000 || Mathf.Abs(rt.anchoredPosition.y) > 10000)
-                rt.anchoredPosition = Vector2.zero; // กันหลุดจอ by mistake
+                rt.anchoredPosition = Vector2.zero;
         }
 
         _current = index;
@@ -195,12 +216,11 @@ public class OpenCanvas : MonoBehaviour
 
     private void ForceEnableHierarchy(GameObject go)
     {
-        // เปิดพาเรนต์ทุกชั้น
         var t = go.transform;
         while (t != null)
         {
             if (!t.gameObject.activeSelf) t.gameObject.SetActive(true);
-            // ถ้ามี CanvasGroup บนพาเรนต์ → ล้างทับ
+
             var cgs = t.GetComponents<CanvasGroup>();
             foreach (var cg in cgs)
             {
@@ -208,18 +228,21 @@ public class OpenCanvas : MonoBehaviour
                 cg.blocksRaycasts = true;
                 cg.interactable = true;
             }
+
             t = t.parent;
         }
     }
 
-    // แค่ไว้ดีบักดูเส้นทางใน Console
     private string GetPath(Transform tr)
     {
         System.Text.StringBuilder sb = new();
-        while (tr != null) { sb.Insert(0, "/" + tr.name); tr = tr.parent; }
+        while (tr != null)
+        {
+            sb.Insert(0, "/" + tr.name);
+            tr = tr.parent;
+        }
         return sb.ToString();
     }
-
 
     private void CloseAllUI()
     {
@@ -247,7 +270,6 @@ public class OpenCanvas : MonoBehaviour
             cg.blocksRaycasts = false;
             cg.interactable = false;
 
-            // ไม่จำเป็นต้องปิด Canvas component แต่ปิด GameObject ให้ชัดไปเลย
             if (cg.gameObject.activeSelf)
                 cg.gameObject.SetActive(false);
         }
