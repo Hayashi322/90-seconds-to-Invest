@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using TMPro;
 
 public class LotteryManager : NetworkBehaviour
 {
@@ -10,6 +11,8 @@ public class LotteryManager : NetworkBehaviour
     [SerializeField] private int ticketPrice = 120;      // ใบละ 120 ฿
     [SerializeField] private int ticketsPerGame = 12;    // หวยในร้าน 12 ใบ
 
+    [SerializeField] private TextMeshProUGUI InvTicketNumber;
+    [SerializeField] private CanvasGroup CanvasGroup;
     // หวยในร้าน (เลข + สถานะ)
     public NetworkList<LotterySlotNet> Slots = new NetworkList<LotterySlotNet>();
 
@@ -146,6 +149,8 @@ public class LotteryManager : NetworkBehaviour
         // เซ็ตข้อมูลฝั่งผู้เล่น
         lotto.HasTicket.Value = true;
         lotto.TicketNumber.Value = slot.ticketNumber;
+        InvTicketNumber.text = $"{lotto.TicketNumber.Value}";
+        CanvasGroup.alpha = 1;
 
         Debug.Log($"[Lottery] Client {buyerClientId} bought ticket {slot.ticketNumber:000000} at slot {slotIndex}.");
     }
