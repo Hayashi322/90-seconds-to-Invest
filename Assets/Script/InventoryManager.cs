@@ -2,6 +2,8 @@
 using UnityEngine;
 using Unity.Netcode;
 using Unity.Collections;
+using TMPro;
+using UnityEngine.Rendering;
 
 // ===== ชนิดที่ใช้ร่วม =====
 public enum BetChoice
@@ -36,6 +38,8 @@ public struct HoldingNet : INetworkSerializable, IEquatable<HoldingNet>
         => stockName.Equals(other.stockName) && quantity == other.quantity;
 }
 
+
+
 // ===== InventoryManager =====
 public class InventoryManager : NetworkBehaviour
 {
@@ -53,6 +57,8 @@ public class InventoryManager : NetworkBehaviour
 
     // อีเวนต์แจ้งผลคาสิโนให้ UI (ถูกยิงเฉพาะ client เจ้าของ)
     public event Action<CasinoResult> CasinoResultReceived;
+
+   
 
     private void Awake()
     {
@@ -250,10 +256,13 @@ public class InventoryManager : NetworkBehaviour
                 var h = stockHoldings[i];
                 h.quantity += qty;
                 stockHoldings[i] = h; // trigger sync
+               
                 return;
             }
         }
         stockHoldings.Add(new HoldingNet { stockName = key, quantity = qty });
+        
+
     }
 
     private void RemoveOrDecreaseStock(string stockName, int qty)
@@ -266,7 +275,9 @@ public class InventoryManager : NetworkBehaviour
                 var h = stockHoldings[i];
                 h.quantity -= qty;
                 if (h.quantity <= 0)
-                    stockHoldings.RemoveAt(i);
+                { stockHoldings.RemoveAt(i);
+                }
+
                 else
                     stockHoldings[i] = h;
                 return;

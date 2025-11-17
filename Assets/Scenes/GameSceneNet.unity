@@ -2926,7 +2926,7 @@ GameObject:
   - component: {fileID: 155270991}
   - component: {fileID: 155270990}
   m_Layer: 5
-  m_Name: Text (TMP) (3)
+  m_Name: BDMS
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16479,7 +16479,7 @@ GameObject:
   - component: {fileID: 695084390}
   - component: {fileID: 695084389}
   m_Layer: 5
-  m_Name: Text (TMP) (4)
+  m_Name: DELTA
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -18421,6 +18421,14 @@ MonoBehaviour:
   totalPriceText: {fileID: 1160054872}
   buyButton: {fileID: 517956431}
   sellButton: {fileID: 412524604}
+  Stock_text:
+  - {fileID: 329078276}
+  - {fileID: 1258305342}
+  - {fileID: 2036869860}
+  - {fileID: 155270990}
+  - {fileID: 695084389}
+  - {fileID: 1247740077}
+  Stock_Amount: 000000000000000000000000000000000000000000000000
 --- !u!114 &778035577
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27323,7 +27331,7 @@ GameObject:
   - component: {fileID: 1247740078}
   - component: {fileID: 1247740077}
   m_Layer: 5
-  m_Name: Text (TMP) (5)
+  m_Name: CPNREIT
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27616,7 +27624,7 @@ GameObject:
   - component: {fileID: 1258305343}
   - component: {fileID: 1258305342}
   m_Layer: 5
-  m_Name: Text (TMP) (1)
+  m_Name: KBank
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -31048,7 +31056,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &1424140152
 Transform:
@@ -44886,7 +44894,7 @@ GameObject:
   - component: {fileID: 2036869861}
   - component: {fileID: 2036869860}
   m_Layer: 5
-  m_Name: Text (TMP) (2)
+  m_Name: AOT
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
