@@ -142,7 +142,7 @@ public class PlayerLawState : NetworkBehaviour
             }
         };
 
-        StartJailClientRpc(duration, reason, sendParams);
+        ShowJailUIClientRpc(duration, reason, sendParams);
     }
 
     /// <summary>
@@ -165,4 +165,24 @@ public class PlayerLawState : NetworkBehaviour
         // TODO: ตรงนี้เอาไว้ต่อกับ JailPanel จริง ๆ ในสเต็ปถัดไป
         // เช่น: JailPanel.Instance.Show(this, duration, reason);
     }
+    [ClientRpc]
+    private void ShowJailUIClientRpc(float duration, string reason, ClientRpcParams clientRpcParams = default)
+    {
+        // เรียก UI ฝั่ง Client
+        JialCanvas.Instance.Show(duration, reason);
+    }
+    public void ServerSendJailToOwner01(float duration, string reason)
+    {
+        // ส่ง RPC ไปเฉพาะเจ้าของคนนี้เท่านั้น
+        var sendParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new List<ulong> { OwnerClientId }
+            }
+        };
+
+        ShowJailUIClientRpc(duration, reason, sendParams);
+    }
+
 }

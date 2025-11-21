@@ -92,6 +92,7 @@ public class LawManager : NetworkBehaviour
 
         // ✅ สั่งให้ client ฝั่ง "เจ้าของคนนี้" ปิด UI + เปิดหน้า Jail (ถ้ามี)
         player.ServerSendJailToOwner(jailDuration, reason);
+        
     }
 
     private void ReleaseFromJail(PlayerLawState player)
