@@ -86,11 +86,25 @@ public class StockMarketManager : NetworkBehaviour
         {
             var s = networkStocks[i];
             s.lastPrice = s.currentPrice;
+
+            // ราคาพื้นฐานแบบเดิม
             float fluc = s.currentPrice * s.volatility * Random.Range(-1f, 1f);
-            s.currentPrice = Mathf.Max(1f, s.currentPrice + fluc);
-            networkStocks[i] = s;  // ต้องเขียนกลับเพื่อ trigger sync
+            float basePrice = Mathf.Max(1f, s.currentPrice + fluc);
+
+            // 🔥 ตัวคูณตาม Event (ดูจากชื่อหุ้น)
+            float eventMul = 1f;
+            if (EventManagerNet.Instance != null)
+            {
+                string symbol = s.stockName.ToString();
+                eventMul = EventManagerNet.Instance.GetStockMultiplier(symbol);
+            }
+
+            s.currentPrice = Mathf.Max(1f, basePrice * eventMul);
+
+            networkStocks[i] = s;  // trigger sync
         }
     }
+
 
     // ---------- Helpers ให้ UI ใช้ ----------
     public bool TryGetStockByName(string name, out StockDataNet s)

@@ -64,16 +64,24 @@ public class RealEstateManager : NetworkBehaviour
     {
         if (!IsServer) return;
 
+        // อ่านตัวคูณอสังหาฯ จาก Event (ไม่มี Event = 1)
+        float eventMul = 1f;
+        if (EventManagerNet.Instance != null)
+            eventMul = EventManagerNet.Instance.GetRealEstateMultiplier();
+
         for (int i = 0; i < Houses.Count; i++)
         {
             var h = Houses[i];
 
-            // อัปเดตราคา
+            // อัปเดตราคาแบบเดิม
             int delta = UnityEngine.Random.Range(-tickK, tickK + 1) * 1_000;
-            h.price = Mathf.Clamp(h.price + delta, minPrice, maxPrice);
+            int basePrice = Mathf.Clamp(h.price + delta, minPrice, maxPrice);
 
-            // จ่ายค่าเช่าเฉพาะบ้านที่ "forRent" และมีเจ้าของ
-            if (h.ownerClientId != ulong.MaxValue && h.forRent &&   ///////////////
+            // นำ Event มาคูณ
+            h.price = Mathf.Clamp(Mathf.RoundToInt(basePrice * eventMul), minPrice, maxPrice);
+
+            // จ่ายค่าเช่า
+            if (h.ownerClientId != ulong.MaxValue && h.forRent &&
                 NetworkManager.Singleton.ConnectedClients.TryGetValue(h.ownerClientId, out var cc) &&
                 cc.PlayerObject)
             {
@@ -84,6 +92,7 @@ public class RealEstateManager : NetworkBehaviour
             Houses[i] = h; // sync
         }
     }
+
 
     [ServerRpc(RequireOwnership = false)]
     public void BuyHouseServerRpc(int index, ServerRpcParams rpc = default)

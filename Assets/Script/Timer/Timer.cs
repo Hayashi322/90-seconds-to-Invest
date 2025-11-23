@@ -20,7 +20,7 @@ public class Timer : NetworkBehaviour
     // ===== Config =====
     // ตอนเทสต์: จบเกมเมื่อครบ 1 phase
     // ถ้าเล่นจริงครบ 3 รอบ (9 phase) → เปลี่ยนเป็น 9
-    private const int EndPhaseCount = 1;
+    private const int EndPhaseCount = 6;
 
     // ===== Networked State =====
     private NetworkVariable<double> startTime =
@@ -132,6 +132,12 @@ public class Timer : NetworkBehaviour
 
         startTime.Value = NetworkManager.Singleton.ServerTime.Time;
 
+        // 🔥 เรียกสุ่มข่าวทุกครั้งที่เริ่ม Phase 2
+        if (Phase == 2 && EventManagerNet.Instance != null)
+        {
+            EventManagerNet.Instance.RollEventsForThisTurn();
+        }
+
         if (Phase == 3)
             EnterPhase3ClientRpc();
         else
@@ -142,6 +148,7 @@ public class Timer : NetworkBehaviour
 
         Debug.Log($"⏱️ Round {Round}, Phase {Phase}, {currentTime.Value}s (roundCount={roundCount.Value})");
     }
+
 
     private void UpdateRoundLabel()
     {
@@ -222,4 +229,5 @@ public class Timer : NetworkBehaviour
             UnityEngine.SceneManagement.SceneManager.LoadScene("GameOver");
         }
     }
+
 }

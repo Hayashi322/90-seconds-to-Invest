@@ -47,24 +47,25 @@ public class GoldShopManager : NetworkBehaviour
     {
         int delta = Random.Range(minDelta, maxDelta);
         delta = delta * 400;
-        GoldChangePrice.Value = delta ;
-       // int newBuy = Mathf.Max(1_000, delta);
-       // int newSell = Mathf.Max(0, newBuy - 3_000);
+        GoldChangePrice.Value = delta;
 
-        Debug.Log(delta);
+        int newBuy = Mathf.Max(1_000, BuyGoldPrice.Value + delta);
 
-         int newBuy = Mathf.Max(1_000, BuyGoldPrice.Value + delta);
-         
-        if(newBuy > 70000)
-        {
-            newBuy = 70000;
-        }
-        if(newBuy < 10000)
-        {
-            newBuy = 10000;
-        }
-        int newSell = Mathf.Max(0, newBuy - 100); // กำหนดให้ขายถูกกว่าซื้อเสมอ*/
+        // clamp พื้นฐาน
+        if (newBuy > 70000) newBuy = 70000;
+        if (newBuy < 10000) newBuy = 10000;
+
+        // 🔥 ตัวคูณจาก Event
+        float eventMul = 1f;
+        if (EventManagerNet.Instance != null)
+            eventMul = EventManagerNet.Instance.GetGoldMultiplier();
+
+        newBuy = Mathf.Clamp(Mathf.RoundToInt(newBuy * eventMul), 10000, 70000);
+
+        int newSell = Mathf.Max(0, newBuy - 100);
+
         BuyGoldPrice.Value = newBuy;
         SellGoldPrice.Value = newSell;
     }
+
 }
