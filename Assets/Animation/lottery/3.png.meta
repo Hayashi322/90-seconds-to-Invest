@@ -5,15 +5,6 @@ TextureImporter:
   - first:
       213: -6470460504253458178
     second: 3_0
-  - first:
-      213: 6623151957235123224
-    second: 3_1
-  - first:
-      213: 2161284124966242572
-    second: 3_2
-  - first:
-      213: 1646375367856145251
-    second: 3_3
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -125,10 +116,10 @@ TextureImporter:
       name: 3_0
       rect:
         serializedVersion: 2
-        x: 2244
-        y: 6857
-        width: 790
-        height: 190
+        x: 320
+        y: 303
+        width: 482
+        height: 322
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -139,72 +130,6 @@ TextureImporter:
       bones: []
       spriteID: ef817ce047e4436a0800000000000000
       internalID: -6470460504253458178
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: 3_1
-      rect:
-        serializedVersion: 2
-        x: 2979
-        y: 6200
-        width: 1119
-        height: 757
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 814ce683d992aeb50800000000000000
-      internalID: 6623151957235123224
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: 3_2
-      rect:
-        serializedVersion: 2
-        x: 2151
-        y: 6516
-        width: 913
-        height: 119
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: c09cd4fe57c6efd10800000000000000
-      internalID: 2161284124966242572
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: 3_3
-      rect:
-        serializedVersion: 2
-        x: 1625
-        y: 330
-        width: 2286
-        height: 6098
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 363c4089ca919d610800000000000000
-      internalID: 1646375367856145251
       vertices: []
       indices: 
       edges: []
@@ -222,11 +147,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      3_0: -6470460504253458178
-      3_1: 6623151957235123224
-      3_2: 2161284124966242572
-      3_3: 1646375367856145251
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
