@@ -43,6 +43,9 @@ public class HeroControllerNet : NetworkBehaviour
     // ใช้เช็คคุก
     private PlayerLawState lawState;
 
+    // NEW: flag กัน logic ทำงานต่อหลังถูกทำลาย / ย้ายซีน
+    private bool isShuttingDown = false;
+
     private void Awake()
     {
         if (!MapCanvas)
@@ -72,9 +75,26 @@ public class HeroControllerNet : NetworkBehaviour
         SceneManager.activeSceneChanged -= OnSceneChanged;
     }
 
+    // NEW: กันเผื่อโดน Destroy ตอนย้ายซีน
+    private void OnDestroy()
+    {
+        isShuttingDown = true;
+        // ถ้ามี StartCoroutine อื่น ๆ สามารถ StopAllCoroutines() ได้เพิ่ม
+        // StopAllCoroutines();
+    }
+
     private void OnSceneChanged(Scene oldScene, Scene newScene)
     {
         UpdateVisible();
+
+        // NEW: พอออกจาก GameSceneNet ก็เคลียร์ path ทิ้ง
+        if (IsServer && newScene.name != "GameSceneNet")
+        {
+            pathWay = null;
+            _currentPathIndex = 0;
+            currentNode = null;
+            targetNode = null;
+        }
     }
 
     private void UpdateVisible()
@@ -88,6 +108,8 @@ public class HeroControllerNet : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
+
+        isShuttingDown = false; // เผื่อ hero ถูกย้ายซีนแล้ว spawn ใหม่
 
         lawState = GetComponent<PlayerLawState>();
 
@@ -131,6 +153,11 @@ public class HeroControllerNet : NetworkBehaviour
     private void FixedUpdate()
     {
         if (!IsServer) return;
+        if (isShuttingDown) return;  // NEW: ถ้ากำลังปิดตัวไม่ต้องทำอะไร
+
+        // NEW: ถ้าไม่ใช่ GameSceneNet ก็ไม่ต้องวิ่ง path แล้ว
+        if (SceneManager.GetActiveScene().name != "GameSceneNet")
+            return;
 
         // ยังให้คุกหยุดเดินปกติ
         if (lawState != null && lawState.IsInJail.Value)
@@ -237,6 +264,8 @@ public class HeroControllerNet : NetworkBehaviour
 
     private void PathTraversalServer()
     {
+        if (isShuttingDown) return; // NEW
+
         if (pathWay == null || pathWay.Count == 0) return;
         if (_currentPathIndex < 0 || _currentPathIndex >= pathWay.Count)
         {
@@ -246,6 +275,14 @@ public class HeroControllerNet : NetworkBehaviour
         }
 
         var nextNode = pathWay[_currentPathIndex];
+
+        // NEW: node โดน Destroy ไปแล้ว (ย้ายซีน) → เคลียร์ path แล้วจบ
+        if (!nextNode)
+        {
+            pathWay = null;
+            return;
+        }
+
         var nextPos = (Vector2)nextNode.transform.position;
 
         transform.position = Vector2.MoveTowards(transform.position, nextPos, moveSpeed * Time.deltaTime);
@@ -267,7 +304,7 @@ public class HeroControllerNet : NetworkBehaviour
                 };
                 OpenCanvasClientRpc(canvasNumber, sendParams);
 
-                Debug.Log($"[HeroControllerNet] Arrived: {currentNode.name} (canvas {canvasNumber}).");
+                Debug.Log($"[HeroControllerNet] Arrived: {currentNode?.name ?? "null"} (canvas {canvasNumber}).");
             }
         }
     }

@@ -60,12 +60,14 @@ public class LotteryShopUI : MonoBehaviour
         while (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
             yield return null;
 
-        shop = LotteryManager.Instance;
-        if (shop == null)
+        // ---------- รอ LotteryManager.Instance ----------
+        while (LotteryManager.Instance == null)
         {
-            Debug.LogError("[LotteryUI] LotteryManager.Instance = null");
-            yield break;
+            Debug.Log("[LotteryUI] Waiting for LotteryManager.Instance...");
+            yield return null;
         }
+
+        shop = LotteryManager.Instance;
 
         var nm = NetworkManager.Singleton;
         var localObj = nm.SpawnManager.GetLocalPlayerObject();
