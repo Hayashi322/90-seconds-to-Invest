@@ -30,6 +30,9 @@ public class LotteryShopUI : MonoBehaviour
     // index ของใบที่เลือกอยู่ตอนนี้ (-1 = ยังไม่ได้เลือก)
     private int selectedIndex = -1;
 
+    [SerializeField] private TextMeshProUGUI InvTicketNumber;
+    [SerializeField] private CanvasGroup CanvasGroup;
+
     private void OnEnable()
     {
         StartCoroutine(BindLocalAndInitRoutine());
@@ -42,6 +45,10 @@ public class LotteryShopUI : MonoBehaviour
 
         if (buyButton != null)
             buyButton.onClick.RemoveListener(OnClickBuy);
+    }
+    private void Update()
+    {
+        InvTicketNumber.text = $"{lottery.TicketNumber.Value}";
     }
 
     private IEnumerator BindLocalAndInitRoutine()
@@ -60,14 +67,12 @@ public class LotteryShopUI : MonoBehaviour
         while (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
             yield return null;
 
-        // ---------- รอ LotteryManager.Instance ----------
-        while (LotteryManager.Instance == null)
-        {
-            Debug.Log("[LotteryUI] Waiting for LotteryManager.Instance...");
-            yield return null;
-        }
-
         shop = LotteryManager.Instance;
+        if (shop == null)
+        {
+            Debug.LogError("[LotteryUI] LotteryManager.Instance = null");
+            yield break;
+        }
 
         var nm = NetworkManager.Singleton;
         var localObj = nm.SpawnManager.GetLocalPlayerObject();
@@ -124,6 +129,8 @@ public class LotteryShopUI : MonoBehaviour
         {
             buyButton.onClick.RemoveAllListeners();
             buyButton.onClick.AddListener(OnClickBuy);
+
+
         }
         else
         {
@@ -245,4 +252,13 @@ public class LotteryShopUI : MonoBehaviour
         else
             gameObject.SetActive(false);
     }
+
+    public void AddInventory()
+    {
+        /* var rep = shop.Slots*/
+
+        CanvasGroup.alpha = 1;
+
+    }
+
 }

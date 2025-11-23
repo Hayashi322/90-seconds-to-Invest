@@ -9566,6 +9566,8 @@ MonoBehaviour:
     backgroundImage: {fileID: 0}
   priceText: {fileID: 2050726080}
   buyButton: {fileID: 1693647290}
+  InvTicketNumber: {fileID: 1937517104}
+  CanvasGroup: {fileID: 1952255400}
 --- !u!1 &417038743
 GameObject:
   m_ObjectHideFlags: 0
