@@ -5,7 +5,7 @@ using Unity.Netcode;
 public class GameSceneManager : MonoBehaviour
 {
     [Header("Character Data")]
-    public Sprite[] characterSprites;
+    public Sprite[] characterSprites;      // เอาไว้ใช้กับ UI อย่างเดียว
     public Image uiCharacterImage;
 
     [Header("Runtime refs (auto if not set)")]
@@ -19,6 +19,7 @@ public class GameSceneManager : MonoBehaviour
     {
         HeroControllerNet.LocalPlayerSpawned += OnLocalPlayerSpawned;
     }
+
     void OnDisable()
     {
         HeroControllerNet.LocalPlayerSpawned -= OnLocalPlayerSpawned;
@@ -62,42 +63,45 @@ public class GameSceneManager : MonoBehaviour
     {
         if (_applied) return;
 
-        if (PlayerData.Instance == null)
-        {
-            Debug.LogError("PlayerData.Instance ไม่พบ (ควรเริ่มจากหน้าเมนู)");
-            return;
-        }
         if (!playerRenderer || !playerTransform)
         {
             Debug.LogWarning("ยังไม่พบ playerRenderer/playerTransform จะรอตอน local player spawn");
             return;
         }
 
-        int index = PlayerData.Instance.selectedCharacterIndex;
-        if (index < 0 || index >= characterSprites.Length)
+        // 🔹 หาค่า index เพื่อใช้กับ UI: พยายามอ่านจาก HeroControllerNet ก่อน
+        int index = -1;
+        var hero = playerRenderer.GetComponentInParent<HeroControllerNet>();
+        if (hero != null)
         {
-            Debug.LogWarning("Index ตัวละครไม่ถูกต้อง: " + index);
-            return;
+            index = hero.CharacterIndex.Value;
+        }
+        else if (PlayerData.Instance != null)
+        {
+            index = PlayerData.Instance.selectedCharacterIndex;
         }
 
-        // UI
-        if (uiCharacterImage) uiCharacterImage.sprite = characterSprites[index];
+        // 🔹 เซ็ตเฉพาะ UI ถ้า index อยู่ในช่วง
+        if (uiCharacterImage && index >= 0 && index < characterSprites.Length)
+        {
+            uiCharacterImage.sprite = characterSprites[index];
+        }
 
-        // Player sprite
-        var selectedSprite = characterSprites[index];
-        playerRenderer.sprite = selectedSprite;
-
-        // ปรับสเกลให้สูง = targetSize (อ่านจาก sprite ที่เพิ่งเซ็ต)
+        // 🔹 ไม่แตะ playerRenderer.sprite เลย ปล่อยให้ HeroControllerNet จัดการ
+        //    ใช้ sprite ปัจจุบันเพื่อคำนวณสเกลเฉย ๆ
         var sprite = playerRenderer.sprite;
-        float h = sprite.bounds.size.y;
-        if (h > 0f)
+        if (sprite != null)
         {
-            float scale = targetSize / h;
-            playerTransform.localScale = Vector3.one * scale;
-        }
-        else
-        {
-            Debug.LogWarning("Sprite height is 0?");
+            float h = sprite.bounds.size.y;
+            if (h > 0f)
+            {
+                float scale = targetSize / h;
+                playerTransform.localScale = Vector3.one * scale;
+            }
+            else
+            {
+                Debug.LogWarning("Sprite height is 0?");
+            }
         }
 
         _applied = true;

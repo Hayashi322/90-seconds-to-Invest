@@ -81,18 +81,81 @@ public class RealEstateUI : MonoBehaviour
         var rec = manager.Houses[currentIndex];
 
         houseNameText.text = $"House {currentIndex + 1}";
-        housePriceText.text = $"Price: {rec.price:N0}";
+        housePriceText.text = $"ราคา: {rec.price:N0}";
 
-        string ownerLabel = "None";
-        if (rec.ownerClientId != ulong.MaxValue) ////////////////
+        string ownerLabel = "ไม่มีเจ้าของ";
+
+        if (rec.ownerClientId != ulong.MaxValue)
         {
-            ownerLabel = (NetworkManager.Singleton &&
-                          NetworkManager.Singleton.LocalClientId == rec.ownerClientId)
-                         ? "You"
-                         : $"P{rec.ownerClientId}";
+            ownerLabel = GetOwnerLabel(rec.ownerClientId);
         }
 
-        string rentFlag = rec.forRent ? "Yes" : "No";
-        ownerHouseText.text = $"Owner : {ownerLabel}  |  For Rent : {rentFlag}";
+        string rentFlag = rec.forRent ? "ใช่" : "ไม่";
+        ownerHouseText.text = $"เจ้าของ : {ownerLabel}  |  ปล่อยเช่า : {rentFlag}";
     }
+
+    /// <summary>
+    /// คืนชื่อเจ้าของบ้าน จาก clientId
+    /// - ถ้าเป็นเราเอง → ใช้ชื่อเรา
+    ///   (ดึงจาก LobbyManager ก่อน, ถ้าไม่มีใช้จาก PlayerData / PlayerPrefs)
+    /// - ถ้าเป็นคนอื่น → ถ้าเจอใน LobbyManager ใช้ playerName
+    /// - ถ้าไม่เจอ → fallback เป็น "P{clientId}"
+    /// </summary>
+    private string GetOwnerLabel(ulong ownerClientId)
+    {
+        var nm = NetworkManager.Singleton;
+
+        // เตรียมตัวแปรไว้เก็บชื่อจาก LobbyManager (ใช้ได้ทั้งของเราและของคนอื่น)
+        string nameFromLobby = null;
+
+        var lobby = LobbyManager.Instance;
+        if (lobby != null && lobby.players != null)
+        {
+            for (int i = 0; i < lobby.players.Count; i++)
+            {
+                var p = lobby.players[i];
+                if (p.clientId == ownerClientId)
+                {
+                    string n = p.playerName.ToString();
+                    if (!string.IsNullOrWhiteSpace(n))
+                    {
+                        nameFromLobby = n;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // ถ้าเป็นบ้านของเราเอง (LocalClient)
+        if (nm != null && nm.LocalClientId == ownerClientId)
+        {
+            // 1) ถ้าใน LobbyManager มีชื่อเราอยู่แล้ว → ใช้อันนี้ก่อน
+            if (!string.IsNullOrWhiteSpace(nameFromLobby))
+                return nameFromLobby + " (ฉัน)";
+
+            // 2) ลองดึงจาก PlayerData (ดาต้ากลางของเรา)
+            if (PlayerData.Instance != null &&
+                !string.IsNullOrWhiteSpace(PlayerData.Instance.playerName))
+            {
+                return PlayerData.Instance.playerName + " (ฉัน)";
+            }
+
+            // 3) fallback จาก PlayerPrefs ("player_name")
+            string prefsName = PlayerPrefs.GetString("player_name", "");
+            if (!string.IsNullOrWhiteSpace(prefsName))
+                return prefsName + " (ฉัน)";
+
+            // 4) fallback สุดท้าย
+            return $"P{ownerClientId}";
+        }
+
+        // ถ้าเป็นคนอื่น → ใช้ชื่อจาก LobbyManager ถ้ามี
+        if (!string.IsNullOrWhiteSpace(nameFromLobby))
+            return nameFromLobby;
+
+        // หาไม่เจอเลย → ใช้รูปแบบเดิม
+        return $"P{ownerClientId}";
+    }
+
+
 }

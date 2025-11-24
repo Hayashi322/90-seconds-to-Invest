@@ -48,18 +48,31 @@ public class LobbyManager : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
+        // --- ฝั่ง Client: ส่งชื่อที่เซฟไว้ขึ้น Server ---
+        if (IsClient)
+        {
+            string savedName = PlayerPrefs.GetString("player_name", "");
+
+            if (!string.IsNullOrWhiteSpace(savedName))
+            {
+                // เรียก ServerRpc ที่มีอยู่แล้ว
+                SetNameServerRpc(savedName);
+            }
+        }
+
+        // --- ฝั่ง Server: ลงทะเบียน callback ต่าง ๆ ---
         if (IsServer)
         {
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
 
-            // เมื่อ LobbyManager spawn ขึ้นมา ให้เพิ่ม client ที่เชื่อมอยู่แล้วเข้าลิสต์ทันที
             foreach (var clientId in NetworkManager.Singleton.ConnectedClientsIds)
             {
                 OnClientConnected(clientId);
             }
         }
     }
+
 
     public override void OnNetworkDespawn()
     {

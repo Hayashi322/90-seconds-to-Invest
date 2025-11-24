@@ -4,25 +4,44 @@ using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviour
 {
+    [Header("Name / Profile")]
+    [SerializeField] private NameSaveUI nameSaveUI;   // <<--- ลากมาจาก UI ตั้งชื่อ
+
+    [Header("UI Refs")]
     [SerializeField] private TMP_InputField joinCodeField;
     [SerializeField] private Button quitButton;
 
     private void Start()
     {
-        quitButton.onClick.AddListener(QuitGame);
+        if (quitButton)
+            quitButton.onClick.AddListener(QuitGame);
     }
 
     public async void StartHost()
     {
+        // เช็คว่าตั้งชื่อแล้วหรือยัง
+        if (nameSaveUI && !nameSaveUI.EnsureNameSavedOrWarn())
+        {
+            // ยังไม่ตั้งชื่อ → กระพริบเตือนแล้วไม่ไปต่อ
+            return;
+        }
+
         HostSingleton.Instance.CreateHost();
-        // (ถ้ามี RelayJoinCodeDisplay อยู่ในฉาก มันจะ subscribe เองตอน OnEnable)
         await HostSingleton.Instance.GameManager.StartHostAsync();
-        // หลังได้โค้ด อีเวนต์จะยิง → UI อัปเดตเอง
+        // RelayJoinCodeDisplay จะอัปเดตเองถ้ามีในฉาก
     }
 
     public async void StartClient()
     {
-        await ClientSingleton.Instance.GameManager.StartClientAsync(joinCodeField.text);
+        //  เช็คว่าตั้งชื่อแล้วหรือยัง
+        if (nameSaveUI && !nameSaveUI.EnsureNameSavedOrWarn())
+        {
+            // ยังไม่ตั้งชื่อ → กระพริบเตือนแล้วไม่ไปต่อ
+            return;
+        }
+
+        string code = joinCodeField ? joinCodeField.text : string.Empty;
+        await ClientSingleton.Instance.GameManager.StartClientAsync(code);
     }
 
     public void QuitGame()

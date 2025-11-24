@@ -29,7 +29,6 @@ public class HeroControllerNet : NetworkBehaviour
     public NetworkVariable<int> CharacterIndex = new NetworkVariable<int>(
         -1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
-    // ตอนนี้ไม่ได้ใช้บล็อกเดินแล้ว แต่เก็บไว้เผื่อ debug
     public NetworkVariable<bool> PauseByUI = new NetworkVariable<bool>(
         false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
@@ -39,12 +38,11 @@ public class HeroControllerNet : NetworkBehaviour
     private GameObject targetNode;
 
     private SpriteRenderer _sr;
-
-    // ใช้เช็คคุก
     private PlayerLawState lawState;
-
-    // NEW: flag กัน logic ทำงานต่อหลังถูกทำลาย / ย้ายซีน
     private bool isShuttingDown = false;
+
+    // กันไม่ให้รับเป้าหมายใหม่ระหว่างเดินอยู่ (ฝั่ง Server)
+    private bool isTravelling = false;
 
     private void Awake()
     {
@@ -75,25 +73,22 @@ public class HeroControllerNet : NetworkBehaviour
         SceneManager.activeSceneChanged -= OnSceneChanged;
     }
 
-    // NEW: กันเผื่อโดน Destroy ตอนย้ายซีน
     private void OnDestroy()
     {
         isShuttingDown = true;
-        // ถ้ามี StartCoroutine อื่น ๆ สามารถ StopAllCoroutines() ได้เพิ่ม
-        // StopAllCoroutines();
     }
 
     private void OnSceneChanged(Scene oldScene, Scene newScene)
     {
         UpdateVisible();
 
-        // NEW: พอออกจาก GameSceneNet ก็เคลียร์ path ทิ้ง
         if (IsServer && newScene.name != "GameSceneNet")
         {
             pathWay = null;
             _currentPathIndex = 0;
             currentNode = null;
             targetNode = null;
+            isTravelling = false;
         }
     }
 
@@ -109,41 +104,77 @@ public class HeroControllerNet : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
-        isShuttingDown = false; // เผื่อ hero ถูกย้ายซีนแล้ว spawn ใหม่
+        isShuttingDown = false;
 
         lawState = GetComponent<PlayerLawState>();
 
-        if (IsClient)
+        // ฟังตอนโดนจับ / ถูกปล่อย (เฉพาะฝั่ง client ของตัวเอง)
+        if (lawState != null && IsClient && IsOwner)
         {
-            CharacterIndex.OnValueChanged += OnCharacterIndexChanged;
-            OnCharacterIndexChanged(-1, CharacterIndex.Value);
+            lawState.IsInJail.OnValueChanged += OnIsInJailChanged;
         }
 
-        if (IsOwner) LocalPlayerSpawned?.Invoke(this);
-        if (IsServer) StartCoroutine(ServerInitAfterSpawn());
+        CharacterIndex.OnValueChanged += OnCharacterIndexChanged;
+        OnCharacterIndexChanged(-1, CharacterIndex.Value);
+
+        if (IsOwner)
+        {
+            LocalPlayerSpawned?.Invoke(this);
+        }
+
+        if (IsServer)
+        {
+            StartCoroutine(ServerInitAfterSpawn());
+        }
     }
 
     public override void OnNetworkDespawn()
     {
-        if (IsClient)
-            CharacterIndex.OnValueChanged -= OnCharacterIndexChanged;
+        CharacterIndex.OnValueChanged -= OnCharacterIndexChanged;
 
-        if (IsOwner) LocalPlayerDespawned?.Invoke();
+        if (lawState != null && IsClient && IsOwner)
+        {
+            lawState.IsInJail.OnValueChanged -= OnIsInJailChanged;
+        }
+
+        if (IsOwner)
+            LocalPlayerDespawned?.Invoke();
+
         base.OnNetworkDespawn();
     }
 
     private void OnCharacterIndexChanged(int prev, int current)
     {
+        Debug.Log(
+            $"[Hero] OnCharacterIndexChanged name={name} " +
+            $"Owner={OwnerClientId} Local={NetworkManager.Singleton.LocalClientId} " +
+            $"IsOwner={IsOwner} prev={prev} current={current}");
+
         ApplyCharacterVisual(current);
     }
 
     private void ApplyCharacterVisual(int index)
     {
-        if (!bodyRenderer) return;
-        if (index < 0 || index >= characterSpritesInGame.Length) return;
+        if (!bodyRenderer)
+        {
+            Debug.LogWarning($"[HeroControllerNet] bodyRenderer missing on {name}");
+            return;
+        }
+
+        if (index < 0 || index >= characterSpritesInGame.Length)
+        {
+            Debug.LogWarning($"[HeroControllerNet] Invalid character index {index} on {name}");
+            return;
+        }
+
+        Debug.Log(
+            $"[HeroControllerNet] ApplyCharacterVisual index={index} " +
+            $"for {name} | OwnerClientId={OwnerClientId}, IsOwner={IsOwner}");
+
         bodyRenderer.sprite = characterSpritesInGame[index];
     }
 
+    // เรียกจาก LobbyManager.ApplyCharacterToHero (ฝั่ง Server)
     public void ServerSetCharacterIndex(int index)
     {
         if (!IsServer) return;
@@ -153,18 +184,13 @@ public class HeroControllerNet : NetworkBehaviour
     private void FixedUpdate()
     {
         if (!IsServer) return;
-        if (isShuttingDown) return;  // NEW: ถ้ากำลังปิดตัวไม่ต้องทำอะไร
+        if (isShuttingDown) return;
 
-        // NEW: ถ้าไม่ใช่ GameSceneNet ก็ไม่ต้องวิ่ง path แล้ว
         if (SceneManager.GetActiveScene().name != "GameSceneNet")
             return;
 
-        // ยังให้คุกหยุดเดินปกติ
         if (lawState != null && lawState.IsInJail.Value)
             return;
-
-        // ไม่ใช้ PauseByUI บล็อกเดินแล้ว
-        // if (PauseByUI.Value) return;
 
         PathTraversalServer();
     }
@@ -177,6 +203,7 @@ public class HeroControllerNet : NetworkBehaviour
         _currentPathIndex = 0;
         currentNode = null;
         targetNode = null;
+        isTravelling = false;
 
         Debug.Log("[HeroControllerNet] Reset path & current node after teleport.");
     }
@@ -203,6 +230,14 @@ public class HeroControllerNet : NetworkBehaviour
     private void SetDestinationServerRpc(int waypointId)
     {
         if (!IsServer) return;
+
+        // ถ้ายังเดินอยู่ ไม่รับคำสั่งใหม่
+        if (isTravelling && pathWay != null && pathWay.Count > 0)
+        {
+            Debug.Log($"[HeroControllerNet] Already travelling for {name}, ignore new move request.");
+            return;
+        }
+
         if (!EnsureWaypointsReady())
         {
             Debug.LogError("[HeroControllerNet] waypointController/graph not ready.");
@@ -228,7 +263,7 @@ public class HeroControllerNet : NetworkBehaviour
         currentNode = startGo;
         targetNode = goalGo;
 
-        // ⭐ กรณีคลิกที่ node เดิม (เช่น ยืนอยู่ที่ policeWaypoint แล้วคลิกซ้ำ)
+        // กรณีคลิกที่ node เดิม
         if (currentNode == targetNode)
         {
             int canvasNumber = ComputeCanvasNumberFromNode(currentNode);
@@ -242,9 +277,9 @@ public class HeroControllerNet : NetworkBehaviour
                 Debug.Log($"[HeroControllerNet] Immediate open canvas {canvasNumber} at node {currentNode.name} (start==goal).");
             }
 
-            // ไม่ต้องเดิน ใช้แค่นี้พอ
             pathWay = null;
             _currentPathIndex = 0;
+            isTravelling = false;
             return;
         }
 
@@ -253,38 +288,41 @@ public class HeroControllerNet : NetworkBehaviour
         if (pathWay != null && pathWay.Count > 0)
         {
             _currentPathIndex = 0;
+            isTravelling = true; // เริ่มเดินแล้ว
             Debug.Log($"[HeroControllerNet] Path len = {pathWay.Count}");
         }
         else
         {
             Debug.LogError("[HeroControllerNet] A* returned null/empty (no connected edges?).");
             pathWay = null;
+            isTravelling = false;
         }
     }
 
     private void PathTraversalServer()
     {
-        if (isShuttingDown) return; // NEW
+        if (isShuttingDown) return;
 
         if (pathWay == null || pathWay.Count == 0) return;
+
         if (_currentPathIndex < 0 || _currentPathIndex >= pathWay.Count)
         {
             Debug.LogError($"[HeroControllerNet] Path index OOR: {_currentPathIndex}");
             pathWay = null;
+            isTravelling = false;
             return;
         }
 
         var nextNode = pathWay[_currentPathIndex];
 
-        // NEW: node โดน Destroy ไปแล้ว (ย้ายซีน) → เคลียร์ path แล้วจบ
         if (!nextNode)
         {
             pathWay = null;
+            isTravelling = false;
             return;
         }
 
         var nextPos = (Vector2)nextNode.transform.position;
-
         transform.position = Vector2.MoveTowards(transform.position, nextPos, moveSpeed * Time.deltaTime);
 
         if (Vector2.Distance((Vector2)transform.position, nextPos) < reachOffset)
@@ -293,6 +331,8 @@ public class HeroControllerNet : NetworkBehaviour
             if (_currentPathIndex >= pathWay.Count)
             {
                 pathWay = null;
+                isTravelling = false;
+
                 currentNode = targetNode;
                 targetNode = null;
 
@@ -407,9 +447,11 @@ public class HeroControllerNet : NetworkBehaviour
         if (canvasNum < 0) return;
 
 #if UNITY_2023_1_OR_NEWER
-        var opener = FindFirstObjectByType<OpenCanvas>(FindObjectsInactive.Include);
+        var opener = OpenCanvas.Instance ??
+                     FindFirstObjectByType<OpenCanvas>(FindObjectsInactive.Include);
 #else
-        var opener = FindObjectOfType<OpenCanvas>(true);
+        var opener = OpenCanvas.Instance ??
+                     FindObjectOfType<OpenCanvas>(true);
 #endif
         if (!opener)
         {
@@ -417,5 +459,33 @@ public class HeroControllerNet : NetworkBehaviour
             return;
         }
         opener.openCanvas(canvasNum);
+    }
+
+    /// <summary>
+    /// เวลา IsInJail เปลี่ยนค่า (โดนจับ / ถูกปล่อย)
+    /// </summary>
+    private void OnIsInJailChanged(bool oldValue, bool newValue)
+    {
+        // สนใจเฉพาะตอนเป็น hero ของเรา และเพิ่ง "โดนจับ" (true)
+        if (!IsOwner) return;
+        if (!newValue) return;
+
+#if UNITY_2023_1_OR_NEWER
+        var opener = OpenCanvas.Instance ??
+                     FindFirstObjectByType<OpenCanvas>(FindObjectsInactive.Include);
+#else
+        var opener = OpenCanvas.Instance ??
+                     FindObjectOfType<OpenCanvas>(true);
+#endif
+
+        if (opener != null)
+        {
+            opener.closeCanvas(); // ภายในจะเรียก SetUIOpen(false) ให้ด้วย
+            Debug.Log("[HeroControllerNet] Jailed -> force close all UI for local player");
+        }
+        else
+        {
+            Debug.LogWarning("[HeroControllerNet] Jailed but OpenCanvas not found on client.");
+        }
     }
 }

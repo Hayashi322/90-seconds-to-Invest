@@ -20,7 +20,7 @@ public class Timer : NetworkBehaviour
     // ===== Config =====
     // ตอนเทสต์: จบเกมเมื่อครบ 1 phase
     // ถ้าเล่นจริงครบ 3 รอบ (9 phase) → เปลี่ยนเป็น 9
-    private const int EndPhaseCount = 6;
+    private const int EndPhaseCount = 1;
 
     // ===== Networked State =====
     private NetworkVariable<double> startTime =
