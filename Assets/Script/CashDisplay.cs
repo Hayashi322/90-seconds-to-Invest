@@ -9,6 +9,6 @@ public class CashDisplay : MonoBehaviour
     {
         var inv = InventoryManager.Instance;
         if (inv)
-            cashText.text = $"{inv.cash.Value:N2}";   // ✅ ใช้ .Value
+            cashText.text = $"{inv.cash.Value:N2} บาท";   // ✅ ใช้ .Value
     }
 }

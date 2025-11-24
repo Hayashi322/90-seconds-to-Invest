@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using NUnit;
+using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -14,6 +15,14 @@ public class RealEstateUI : MonoBehaviour
     [SerializeField] private float uiRefreshEvery = 0.5f;
 
     private int currentIndex = -1;
+
+    [Header("กระเป๋าผู้เล่น")]
+    [SerializeField] private TextMeshProUGUI realEstate_Text;
+    [SerializeField] private TextMeshProUGUI realEstatePrice_Text;
+    [SerializeField] private bool IsOwnerHouse = false;
+    [SerializeField] private bool IsEnoghtMoney;
+    [SerializeField] private int B = 999;
+   
 
     private void Start()
     {
@@ -35,22 +44,66 @@ public class RealEstateUI : MonoBehaviour
     public void House3() => SetIndex(2);
     public void House4() => SetIndex(3);
 
+    private void Update()
+    {
+        
+            var inv = InventoryManager.Instance;
+            var rec = manager.Houses[currentIndex];
+            if (inv)
+            {
+                if (inv == null || inv.cash.Value < rec.price)
+                { IsEnoghtMoney = false; }
+                else { IsEnoghtMoney = true; }
+            }  
+       
+    }
     private void SetIndex(int idx)
     {
         currentIndex = idx;
         Refresh();
     }
-
+   
     public void Buy()
     {
+        var rec = manager.Houses[currentIndex];
+
         if (!manager || currentIndex < 0) return;
         manager.BuyHouseServerRpc(currentIndex);
+      
+        if (IsOwnerHouse == true) { return; }
+        else
+        {
+            if (rec.ownerClientId != ulong.MaxValue)
+            {
+                return;
+            }
+            if(IsEnoghtMoney == false) { return; }
+            RealEstateinventoryUI(rec.price, currentIndex);
+            IsOwnerHouse = true;
+            B = currentIndex;
+        }
+
     }
 
     public void Sell()
     {
         if (!manager || currentIndex < 0) return;
         manager.SellHouseServerRpc(currentIndex);
+        if (B != currentIndex) { return; }
+        else
+        {
+            if (IsOwnerHouse == false) { return; }
+            else
+            {
+                realEstate_Text.text = "ไม่ได้ซื้อไว้";
+                realEstatePrice_Text.text = "";
+                IsOwnerHouse = false;
+                B = 999;
+            }
+
+
+        }
+
     }
 
     // ✅ ปุ่มปล่อยเช่า/ยกเลิกปล่อยเช่า
@@ -157,5 +210,17 @@ public class RealEstateUI : MonoBehaviour
         return $"P{ownerClientId}";
     }
 
+    public void RealEstateinventoryUI(int number, int house)
+    {
+        realEstatePrice_Text.text = $"ราคา:{number:N0}";
+        switch (house)
+        {
+            case 0: realEstate_Text.text = "ตึก"; break;
+            case 1: realEstate_Text.text = "บ้านเดี่ยว"; break;
+            case 2: realEstate_Text.text = "บ้านแฝด"; break;
+            case 3: realEstate_Text.text = "คอนโด"; break;
+            default: realEstate_Text.text = "ไม่ได้ซื้อไว้"; break;
+        }
+    }
 
 }

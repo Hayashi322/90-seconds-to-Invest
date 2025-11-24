@@ -18,9 +18,7 @@ public class RealEstateManager : NetworkBehaviour
     [Header("Volatility (±k per tick)")]
     [SerializeField] private int tickK = 50;
 
-    [Header("กระเป๋าผู้เล่น")]
-    [SerializeField] private TextMeshProUGUI realEstate_Text;
-    [SerializeField] private TextMeshProUGUI realEstatePrice_Text;
+
 
     [Serializable]
     public struct HouseRecordNet : INetworkSerializable, IEquatable<HouseRecordNet>
@@ -111,15 +109,7 @@ public class RealEstateManager : NetworkBehaviour
         rec.ownerClientId = clientId;
         rec.forRent = false; // เริ่มต้นยังไม่ปล่อยเช่า
         Houses[index] = rec;
-        realEstatePrice_Text.text = $"ราคา:{rec.price:N0}";
-        switch (index)
-        {
-            case 0: realEstate_Text.text = "ตึก"; break;
-            case 1: realEstate_Text.text = "บ้านเดี่ยว"; break;
-            case 2: realEstate_Text.text = "บ้านแฝด"; break;
-            case 3: realEstate_Text.text = "คอนโด"; break;
-            default: realEstate_Text.text = "ไม่ได้ซื้อไว้"; break;
-        }
+       
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -139,8 +129,7 @@ public class RealEstateManager : NetworkBehaviour
         rec.ownerClientId = ulong.MaxValue;      ///////////
         rec.forRent = false;
         Houses[index] = rec;
-            realEstate_Text.text = "ไม่ได้ซื้อไว้";
-        realEstatePrice_Text.text = "";
+          
 
     }
 

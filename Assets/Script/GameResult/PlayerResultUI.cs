@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using NUnit;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static UnityEngine.Rendering.DebugUI;
 
 public class PlayerResultUI : MonoBehaviour
 {
@@ -31,7 +33,7 @@ public class PlayerResultUI : MonoBehaviour
         if (nameText) nameText.text = playerName;
 
         // ✅ แสดงเงินเป็น THB 1,234,567
-        if (cashText) cashText.text = $"THB {initialCash:N0}";
+        if (cashText) cashText.text =$"{initialCash:N2} บาท"; 
 
         if (rankBadge)
             rankBadge.gameObject.SetActive(false);
