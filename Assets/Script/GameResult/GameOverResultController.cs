@@ -47,17 +47,9 @@ public class GameOverResultController : MonoBehaviour
         // เรียงจาก networth มาก -> น้อย
         list.Sort((a, b) => b.finalNetworth.CompareTo(a.finalNetworth));
 
-        // ⭐ หาว่าเลขที่ถูกรางวัลคืออะไร (ถ้ามีคนถูกรางวัล)
-        int winningTicket = -1;
-        foreach (var data in list)
-        {
-            if (data.lotteryWin && data.lotteryNumber >= 0)
-            {
-                winningTicket = data.lotteryNumber;
-                break;
-            }
-        }
-        Debug.Log($"[ResultCtrl] WinningTicket = {winningTicket}");
+        // ✅ ใช้เลขรางวัลที่ 1 จาก GameResultManager.LastWinningNumber เสมอ
+        int winningTicket = GameResultManager.LastWinningNumber;
+        Debug.Log($"[ResultCtrl] WinningTicket = {winningTicket:000000}");
 
         // ⭐ หา local player (ตาม LocalClientId ของเครื่องนี้)
         ulong localId = 0;
@@ -99,7 +91,6 @@ public class GameOverResultController : MonoBehaviour
 
             uiByClientId[data.clientId] = ui;
 
-            // ให้โผล่มาเฉย ๆ แล้ววิ่งเลข
             yield return ui.ShowWithSlideAndMoney(cashBefore);
             yield return new WaitForSeconds(0.3f);
 
@@ -127,7 +118,7 @@ public class GameOverResultController : MonoBehaviour
                                  "ตั๋วผู้เล่นจะถูกซ่อนเพราะ ticketNumber = -1");
             }
 
-            // ✅ เรียก popup เสมอ (ไม่ผูกกับ myResult.HasValue แล้ว)
+            // ✅ เรียก popup เสมอ (ทุกเครื่องเห็นเลขที่ออกเหมือนกัน)
             yield return lotteryPopup.ShowTicketAndResult(
                 ticketNumber: ticketNumber,
                 winningNumber: winningTicket,

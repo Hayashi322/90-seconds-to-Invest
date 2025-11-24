@@ -10,6 +10,9 @@ public class GameResultManager : NetworkBehaviour
     // เก็บผลล่าสุดแบบข้าม Scene (static อยู่ได้ทุกเครื่อง)
     public static readonly List<PlayerFinalResult> LastResults = new List<PlayerFinalResult>();
 
+    // ✅ เลขรางวัลที่ 1 รอบล่าสุด (ใช้ใน GameOverResultController + LotteryPopup)
+    public static int LastWinningNumber { get; private set; } = -1;
+
     [Header("Scene Names")]
     [SerializeField] private string gameOverSceneName = "GameOver";
 
@@ -76,7 +79,7 @@ public class GameResultManager : NetworkBehaviour
         }
         Instance = this;
 
-        // ❌ ไม่ต้อง DontDestroyOnLoad นะ เป็น Scene Object ของ GameSceneNet พอ
+        // เป็น Scene Object ของ GameSceneNet พอ ไม่ต้อง DontDestroyOnLoad
     }
 
     // ========================
@@ -117,6 +120,18 @@ public class GameResultManager : NetworkBehaviour
         {
             Debug.LogError("[GRM] NetworkManager.Singleton is null");
             return;
+        }
+
+        // ✅ ดึงเลขรางวัลที่ 1 จาก LotteryManager เสมอ
+        if (LotteryManager.Instance != null)
+        {
+            LastWinningNumber = LotteryManager.Instance.WinningTicketNumber;
+            Debug.Log($"[GRM] Winning ticket this game = {LastWinningNumber:000000}");
+        }
+        else
+        {
+            LastWinningNumber = -1;
+            Debug.LogWarning("[GRM] LotteryManager.Instance == null → LastWinningNumber = -1");
         }
 
         foreach (var entry in nm.ConnectedClients)
@@ -172,7 +187,7 @@ public class GameResultManager : NetworkBehaviour
 
         Debug.Log($"[GRM] BuildResults done, count={finalResults.Count}");
 
-        // 1) เก็บสำเนาไว้ใน Host (เผื่อ Host ใช้ LastResults ทันที)
+        // 1) เก็บสำเนาไว้ใน Host
         LastResults.Clear();
         foreach (var kvp in finalResults)
             LastResults.Add(kvp.Value);
@@ -196,15 +211,20 @@ public class GameResultManager : NetworkBehaviour
             netList.Add(net);
         }
 
-        ReceiveResultsClientRpc(netList.ToArray());   // ส่งให้ทุก client (รวม host ด้วย)
+        // ✅ ส่งผล + เลขรางวัลที่ 1 ไปทุก client
+        ReceiveResultsClientRpc(netList.ToArray(), LastWinningNumber);
     }
 
     // ========================
     // ClientRpc: รับผลมาใส่ LastResults (ทุกเครื่อง)
     // ========================
     [ClientRpc]
-    private void ReceiveResultsClientRpc(PlayerFinalResultNet[] results)
+    private void ReceiveResultsClientRpc(PlayerFinalResultNet[] results, int winningNumber)
     {
+        // ✅ sync เลขรางวัลที่ 1 มาทุก client ตรงนี้
+        LastWinningNumber = winningNumber;
+        Debug.Log($"[GRM] ReceiveResultsClientRpc: WinningNumber={LastWinningNumber:000000}");
+
         LastResults.Clear();
 
         foreach (var r in results)
