@@ -81,6 +81,11 @@ public class GoldShopUI : MonoBehaviour
         if(goldChangePrice) goldChangePrice.text = $"ปรับราคา: {shop.GoldChangePrice.Value:N0}";
     }
 
+    private void Update()
+    {
+        RefreshPrices() ;   
+    }
+
     private void RefreshGold()
     {
         if (!inv) return;
