@@ -58,7 +58,8 @@ public class InventoryManager : NetworkBehaviour
     // อีเวนต์แจ้งผลคาสิโนให้ UI (ถูกยิงเฉพาะ client เจ้าของ)
     public event Action<CasinoResult> CasinoResultReceived;
 
-   
+    // แจ้ง UI เรื่องเงินเปลี่ยน (previous, current) เฉพาะ local owner
+    public event Action<float, float> CashChanged;
 
     private void Awake()
     {
@@ -76,9 +77,31 @@ public class InventoryManager : NetworkBehaviour
             cash.Value = 10_000_000f;
 
         // ให้ Instance ชี้มาที่อินเวนทอรีของ local player
-        if (IsOwner) Instance = this;
+        if (IsOwner)
+        {
+            Instance = this;
+            // subscribe ฟังการเปลี่ยนค่า cash ฝั่ง owner
+            cash.OnValueChanged += OnCashValueChanged;
+        }
     }
 
+    public override void OnNetworkDespawn()
+    {
+        base.OnNetworkDespawn();
+
+        if (IsOwner)
+        {
+            cash.OnValueChanged -= OnCashValueChanged;
+        }
+    }
+
+    private void OnCashValueChanged(float previous, float current)
+    {
+        if (IsOwner)
+        {
+            CashChanged?.Invoke(previous, current);
+        }
+    }
 
     // ===== GOLD (Server authoritative) =====
     [ServerRpc(RequireOwnership = false)]
@@ -256,13 +279,10 @@ public class InventoryManager : NetworkBehaviour
                 var h = stockHoldings[i];
                 h.quantity += qty;
                 stockHoldings[i] = h; // trigger sync
-               
                 return;
             }
         }
         stockHoldings.Add(new HoldingNet { stockName = key, quantity = qty });
-        
-
     }
 
     private void RemoveOrDecreaseStock(string stockName, int qty)
@@ -275,11 +295,13 @@ public class InventoryManager : NetworkBehaviour
                 var h = stockHoldings[i];
                 h.quantity -= qty;
                 if (h.quantity <= 0)
-                { stockHoldings.RemoveAt(i);
+                {
+                    stockHoldings.RemoveAt(i);
                 }
-
                 else
+                {
                     stockHoldings[i] = h;
+                }
                 return;
             }
         }

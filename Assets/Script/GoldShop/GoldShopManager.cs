@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using Unity.Netcode;
+﻿using Unity.Netcode;
+using UnityEngine;
 
 public class GoldShopManager : NetworkBehaviour
 {
@@ -15,9 +15,16 @@ public class GoldShopManager : NetworkBehaviour
     [SerializeField] private float updateInterval = 10f; // seconds
 
     // ✅ ราคาที่ซิงก์ข้ามเครือข่าย (Server เขียน / ทุกคนอ่าน)
-    public NetworkVariable<int> BuyGoldPrice = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-    public NetworkVariable<int> SellGoldPrice = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-    public NetworkVariable<int> GoldChangePrice = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<int> BuyGoldPrice =
+        new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<int> SellGoldPrice =
+        new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<int> GoldChangePrice =
+        new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    // ราคา "ฐาน" ฝั่ง Server
+    private int baseBuy;
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -30,8 +37,18 @@ public class GoldShopManager : NetworkBehaviour
 
         if (IsServer)
         {
-            if (BuyGoldPrice.Value == 0) BuyGoldPrice.Value = initialBuy;
-            if (SellGoldPrice.Value == 0) SellGoldPrice.Value = initialSell;
+            if (BuyGoldPrice.Value == 0)
+            {
+                baseBuy = initialBuy;
+                BuyGoldPrice.Value = baseBuy;
+            }
+            else
+            {
+                baseBuy = BuyGoldPrice.Value;
+            }
+
+            if (SellGoldPrice.Value == 0)
+                SellGoldPrice.Value = initialSell;
 
             InvokeRepeating(nameof(ServerUpdatePrices), 3f, updateInterval);
         }
@@ -40,32 +57,28 @@ public class GoldShopManager : NetworkBehaviour
     private void OnDestroy()
     {
         if (IsServer) CancelInvoke(nameof(ServerUpdatePrices));
+        if (Instance == this) Instance = null;
     }
 
     // รันเฉพาะ Server เท่านั้น
     private void ServerUpdatePrices()
     {
-        int delta = Random.Range(minDelta, maxDelta);
-        delta = delta * 400;
-        GoldChangePrice.Value = delta;
+        // 1) อัปเดต base price ตาม delta
+        int delta = Random.Range(minDelta, maxDelta + 1) * 400;
+        baseBuy = Mathf.Clamp(baseBuy + delta, 10_000, 70_000);
 
-        int newBuy = Mathf.Max(1_000, BuyGoldPrice.Value + delta);
-
-        // clamp พื้นฐาน
-        if (newBuy > 70000) newBuy = 70000;
-        if (newBuy < 10000) newBuy = 10000;
-
-        // 🔥 ตัวคูณจาก Event
+        // 2) ตัวคูณจาก Event
         float eventMul = 1f;
         if (EventManagerNet.Instance != null)
             eventMul = EventManagerNet.Instance.GetGoldMultiplier();
 
-        newBuy = Mathf.Clamp(Mathf.RoundToInt(newBuy * eventMul), 10000, 70000);
-
+        // 3) ราคาจริง = base * eventMultiplier
+        int newBuy = Mathf.Clamp(Mathf.RoundToInt(baseBuy * eventMul), 10_000, 70_000);
         int newSell = Mathf.Max(0, newBuy - 100);
+
+        GoldChangePrice.Value = newBuy - BuyGoldPrice.Value;
 
         BuyGoldPrice.Value = newBuy;
         SellGoldPrice.Value = newSell;
     }
-
 }

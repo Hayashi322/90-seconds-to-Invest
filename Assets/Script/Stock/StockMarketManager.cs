@@ -11,6 +11,9 @@ public class StockMarketManager : NetworkBehaviour
     // ใช้จำตัวที่ผู้เล่นเลือกใน UI
     public string selectedStock;
 
+    // ราคา "ฐาน" ต่อหุ้น ใช้เฉพาะฝั่ง Server
+    private float[] basePrices;
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -25,73 +28,72 @@ public class StockMarketManager : NetworkBehaviour
 
         if (IsServer)
         {
-            networkStocks.Add(new StockDataNet
-            {
-                stockName = (FixedString32Bytes)"PTT",          // Energy / Oil & Gas
-                currentPrice = 31.75f,
-                lastPrice = 31.75f,
-                volatility = 0.020f    // ±2.0%
-            });
+            networkStocks.Clear();
 
-            networkStocks.Add(new StockDataNet
-            {
-                stockName = (FixedString32Bytes)"KBANK",        // Banking / Finance
-                currentPrice = 180.50f,
-                lastPrice = 180.50f,
-                volatility = 0.018f    // ±1.8%
-            });
+            // สร้างหุ้นเริ่มต้น
+            AddStock("PTT", 31.75f, 0.020f); // Energy / Oil & Gas
+            AddStock("KBANK", 180.50f, 0.018f); // Banking / Finance
+            AddStock("AOT", 39.50f, 0.030f); // Tourism / Airports
+            AddStock("BDMS", 32.00f, 0.015f); // Healthcare / Hospitals
+            AddStock("DELTA", 84.00f, 0.035f); // Technology / Electronics
+            AddStock("CPNREIT", 18.00f, 0.012f); // Real Estate / REIT
 
-            networkStocks.Add(new StockDataNet
+            // สร้าง basePrices ให้ยาวเท่ากับจำนวนหุ้น
+            basePrices = new float[networkStocks.Count];
+            for (int i = 0; i < networkStocks.Count; i++)
             {
-                stockName = (FixedString32Bytes)"AOT",          // Tourism / Airports
-                currentPrice = 39.50f,
-                lastPrice = 39.50f,
-                volatility = 0.030f    // ±3.0%
-            });
-
-            networkStocks.Add(new StockDataNet
-            {
-                stockName = (FixedString32Bytes)"BDMS",         // Healthcare / Hospitals
-                currentPrice = 32.00f,
-                lastPrice = 32.00f,
-                volatility = 0.015f    // ±1.5%
-            });
-
-            networkStocks.Add(new StockDataNet
-            {
-                stockName = (FixedString32Bytes)"DELTA",        // Technology / Electronics
-                currentPrice = 84.00f,
-                lastPrice = 84.00f,
-                volatility = 0.035f    // ±3.5%
-            });
-
-            networkStocks.Add(new StockDataNet
-            {
-                stockName = (FixedString32Bytes)"CPNREIT",      // Real Estate / REIT
-                currentPrice = 18.00f,
-                lastPrice = 18.00f,
-                volatility = 0.012f    // ±1.2%
-            });
-
+                basePrices[i] = networkStocks[i].currentPrice;
+            }
 
             InvokeRepeating(nameof(UpdateStockPrices), 3f, 5f);
         }
     }
 
+    private void OnDestroy()
+    {
+        if (IsServer)
+        {
+            CancelInvoke(nameof(UpdateStockPrices));
+        }
+
+        if (Instance == this)
+            Instance = null;
+    }
+
+    private void AddStock(string symbol, float price, float volatility)
+    {
+        networkStocks.Add(new StockDataNet
+        {
+            stockName = (FixedString32Bytes)symbol,
+            currentPrice = price,
+            lastPrice = price,
+            volatility = volatility
+        });
+    }
+
     private void UpdateStockPrices()
     {
         if (!IsServer) return;
+        if (networkStocks.Count == 0) return;
+
+        if (basePrices == null || basePrices.Length != networkStocks.Count)
+        {
+            basePrices = new float[networkStocks.Count];
+            for (int i = 0; i < networkStocks.Count; i++)
+                basePrices[i] = networkStocks[i].currentPrice;
+        }
 
         for (int i = 0; i < networkStocks.Count; i++)
         {
             var s = networkStocks[i];
-            s.lastPrice = s.currentPrice;
 
-            // ราคาพื้นฐานแบบเดิม
-            float fluc = s.currentPrice * s.volatility * Random.Range(-1f, 1f);
-            float basePrice = Mathf.Max(1f, s.currentPrice + fluc);
+            // 1) อัปเดต base price ตาม volatility
+            float baseP = basePrices[i];
+            float fluc = baseP * s.volatility * Random.Range(-1f, 1f);
+            baseP = Mathf.Max(1f, baseP + fluc);
+            basePrices[i] = baseP;
 
-            // 🔥 ตัวคูณตาม Event (ดูจากชื่อหุ้น)
+            // 2) ดึงตัวคูณจาก Event ตาม symbol
             float eventMul = 1f;
             if (EventManagerNet.Instance != null)
             {
@@ -99,12 +101,13 @@ public class StockMarketManager : NetworkBehaviour
                 eventMul = EventManagerNet.Instance.GetStockMultiplier(symbol);
             }
 
-            s.currentPrice = Mathf.Max(1f, basePrice * eventMul);
+            // 3) อัปเดตราคาโชว์จริง
+            s.lastPrice = s.currentPrice;
+            s.currentPrice = Mathf.Max(1f, baseP * eventMul);
 
             networkStocks[i] = s;  // trigger sync
         }
     }
-
 
     // ---------- Helpers ให้ UI ใช้ ----------
     public bool TryGetStockByName(string name, out StockDataNet s)

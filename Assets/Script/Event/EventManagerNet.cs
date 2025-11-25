@@ -142,6 +142,9 @@ public class EventManagerNet : NetworkBehaviour
                     foreach (var key in new List<string>(stockMultipliers.Keys))
                         stockMultipliers[key] *= eff.multiplier;
                     break;
+
+                    // ถ้ามี target ใหม่ (เช่น ภาษี, คาสิโน, เงินอุดหนุน)
+                    // ให้ไปจัดการในระบบอื่น เช่น TaxManager / CasinoManager แยกต่างหาก
             }
         }
     }

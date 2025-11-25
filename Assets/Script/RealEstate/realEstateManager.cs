@@ -1,10 +1,11 @@
 ﻿using System;
 using Unity.Netcode;
 using UnityEngine;
-using TMPro;
 
 public class RealEstateManager : NetworkBehaviour
 {
+    public static RealEstateManager Instance { get; private set; }
+
     [Header("Initial Prices (Baht)")]
     [SerializeField] private int[] initialPrices = new int[] { 8_000_000, 10_000_000, 12_000_000, 15_000_000 };
 
@@ -18,14 +19,12 @@ public class RealEstateManager : NetworkBehaviour
     [Header("Volatility (±k per tick)")]
     [SerializeField] private int tickK = 50;
 
-
-
     [Serializable]
     public struct HouseRecordNet : INetworkSerializable, IEquatable<HouseRecordNet>
     {
-        public int price;
-        public ulong ownerClientId; // 0 = none
-        public bool forRent;        // ✅ ปล่อยเช่า/ไม่ปล่อย
+        public int price;          // ราคา "ที่เห็น" = base * multiplier
+        public ulong ownerClientId; // ulong.MaxValue = none
+        public bool forRent;       // ปล่อยเช่า/ไม่ปล่อย
 
         public void NetworkSerialize<T>(BufferSerializer<T> s) where T : IReaderWriter
         {
@@ -40,8 +39,18 @@ public class RealEstateManager : NetworkBehaviour
 
     public NetworkList<HouseRecordNet> Houses { get; private set; }
 
+    // ราคา "ฐาน" (ไม่โดน Event คูณ) ใช้เฉพาะฝั่ง Server
+    private int[] basePrices;
+
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+
         Houses = new NetworkList<HouseRecordNet>();
     }
 
@@ -51,16 +60,41 @@ public class RealEstateManager : NetworkBehaviour
         if (IsServer)
         {
             Houses.Clear();
-            for (int i = 0; i < initialPrices.Length; i++)
-                Houses.Add(new HouseRecordNet { price = initialPrices[i], ownerClientId = ulong.MaxValue, forRent = false });
+
+            int count = initialPrices.Length;
+            basePrices = new int[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                basePrices[i] = Mathf.Clamp(initialPrices[i], minPrice, maxPrice);
+
+                Houses.Add(new HouseRecordNet
+                {
+                    price = basePrices[i],
+                    ownerClientId = ulong.MaxValue,
+                    forRent = false
+                });
+            }
 
             InvokeRepeating(nameof(ServerTickUpdatePricesAndRent), 3f, updateInterval);
         }
     }
 
+    private void OnDestroy()
+    {
+        if (IsServer)
+        {
+            CancelInvoke(nameof(ServerTickUpdatePricesAndRent));
+        }
+
+        if (Instance == this)
+            Instance = null;
+    }
+
     private void ServerTickUpdatePricesAndRent()
     {
         if (!IsServer) return;
+        if (Houses.Count == 0 || basePrices == null) return;
 
         // อ่านตัวคูณอสังหาฯ จาก Event (ไม่มี Event = 1)
         float eventMul = 1f;
@@ -71,26 +105,33 @@ public class RealEstateManager : NetworkBehaviour
         {
             var h = Houses[i];
 
-            // อัปเดตราคาแบบเดิม
+            // 1) อัปเดต "base price" แบบสุ่มปกติ
             int delta = UnityEngine.Random.Range(-tickK, tickK + 1) * 1_000;
-            int basePrice = Mathf.Clamp(h.price + delta, minPrice, maxPrice);
+            basePrices[i] = Mathf.Clamp(basePrices[i] + delta, minPrice, maxPrice);
 
-            // นำ Event มาคูณ
-            h.price = Mathf.Clamp(Mathf.RoundToInt(basePrice * eventMul), minPrice, maxPrice);
+            // 2) ราคาโชว์จริง = base * eventMultiplier
+            int finalPrice = Mathf.Clamp(
+                Mathf.RoundToInt(basePrices[i] * eventMul),
+                minPrice,
+                maxPrice
+            );
+            h.price = finalPrice;
 
-            // จ่ายค่าเช่า
+            // 3) จ่ายค่าเช่า
             if (h.ownerClientId != ulong.MaxValue && h.forRent &&
                 NetworkManager.Singleton.ConnectedClients.TryGetValue(h.ownerClientId, out var cc) &&
                 cc.PlayerObject)
             {
                 var inv = cc.PlayerObject.GetComponent<InventoryManager>();
-                if (inv) inv.cash.Value += h.price / 100f; // 1% ต่อ tick
+                if (inv)
+                    inv.cash.Value += h.price / 100f; // 1% ต่อ tick จากราคาโชว์
             }
 
             Houses[i] = h; // sync
         }
     }
 
+    // ===== ซื้อ / ขาย / ปล่อยเช่า =====
 
     [ServerRpc(RequireOwnership = false)]
     public void BuyHouseServerRpc(int index, ServerRpcParams rpc = default)
@@ -99,7 +140,7 @@ public class RealEstateManager : NetworkBehaviour
 
         var clientId = rpc.Receive.SenderClientId;
         var rec = Houses[index];
-        if (rec.ownerClientId != ulong.MaxValue) return; // มีเจ้าของแล้ว //////////
+        if (rec.ownerClientId != ulong.MaxValue) return; // มีเจ้าของแล้ว
 
         if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var cc) || !cc.PlayerObject) return;
         var inv = cc.PlayerObject.GetComponent<InventoryManager>();
@@ -109,7 +150,6 @@ public class RealEstateManager : NetworkBehaviour
         rec.ownerClientId = clientId;
         rec.forRent = false; // เริ่มต้นยังไม่ปล่อยเช่า
         Houses[index] = rec;
-       
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -126,19 +166,10 @@ public class RealEstateManager : NetworkBehaviour
         if (inv == null) return;
 
         inv.cash.Value += rec.price;
-        rec.ownerClientId = ulong.MaxValue;      ///////////
+        rec.ownerClientId = ulong.MaxValue;
         rec.forRent = false;
         Houses[index] = rec;
-          
-
     }
-
-
-  
-
-
-
-
 
     // ✅ ปล่อยเช่า/ยกเลิกปล่อยเช่า
     [ServerRpc(RequireOwnership = false)]
