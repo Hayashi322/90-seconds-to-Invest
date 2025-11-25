@@ -76,15 +76,28 @@ public class LobbyUI : MonoBehaviour
 
     private void OnExitLobby()
     {
-        // ปิดการเชื่อมต่อ Network (ทั้ง Host และ Client ใช้ได้เหมือนกัน)
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        var nm = NetworkManager.Singleton;
+
+        if (nm != null && nm.IsListening)
         {
-            NetworkManager.Singleton.Shutdown();
+            // ถ้าเราเป็นโฮสต์ → ทุกคนจะโดนตัด
+            if (nm.IsHost)
+            {
+                Debug.Log("[Lobby] Host leaving room → shutdown server.");
+                nm.Shutdown();
+            }
+            else
+            {
+                // ถ้าเป็น client → ออกจาก server
+                Debug.Log("[Lobby] Client leaving room.");
+                nm.Shutdown();
+            }
         }
 
-        // กลับไปหน้า MainMenu
+        // เด้งกลับหน้าเมนูเฉพาะฝั่งที่กดปุ่ม
         SceneManager.LoadScene("MainMenu");
     }
+
 
     private LobbyManager.PlayerStateNet? FindMe()
     {

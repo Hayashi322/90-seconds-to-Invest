@@ -13,9 +13,7 @@ public class HostGameManager
     private Allocation allocation;
     private const int MaxConnections = 4;
 
-    // เดิมเป็น GameSceneNet
-    // private const string GameSceneName = "GameSceneNet";
-    private const string LobbySceneName = "LobbyScene";   // ✅ ชื่อซีนลอบบี้
+    private const string LobbySceneName = "LobbyScene";
 
     public string JoinCode { get; private set; } = string.Empty;
     public event Action<string> JoinCodeChanged;
@@ -27,6 +25,10 @@ public class HostGameManager
             allocation = await RelayService.Instance.CreateAllocationAsync(MaxConnections);
             JoinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
             Debug.Log($"[Relay] JoinCode = {JoinCode}");
+
+            // ✅ เก็บโค้ดไว้ใน cache ข้ามซีน
+            RelayJoinCodeCache.LastJoinCode = JoinCode;
+
             JoinCodeChanged?.Invoke(JoinCode);
         }
         catch (Exception e)
@@ -41,8 +43,6 @@ public class HostGameManager
 
         NetworkManager.Singleton.StartHost();
 
-        // ✅ ให้เข้า LobbyScene เป็น Network Scene แทน GameSceneNet
         NetworkManager.Singleton.SceneManager.LoadScene(LobbySceneName, LoadSceneMode.Single);
     }
 }
-
