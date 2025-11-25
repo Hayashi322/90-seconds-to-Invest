@@ -179,7 +179,7 @@ public class InventoryManager : NetworkBehaviour
 
         if (win)
         {
-            double reward = cost * 5f;
+            double reward = cost * 3f;
             cash.Value += reward;
         }
 

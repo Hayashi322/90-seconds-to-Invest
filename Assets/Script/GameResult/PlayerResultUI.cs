@@ -90,11 +90,11 @@ public class PlayerResultUI : MonoBehaviour
             long current = (long)Mathf.Lerp(from, to, k);
 
             // ✅ แสดงเป็น THB 1,234,567
-            cashText.text = $"THB {current:N0}";
+            cashText.text =$"{current:N2} บาท";
             yield return null;
         }
 
         // ✅ จบด้วยค่าเต็ม
-        cashText.text = $"THB {to:N0}";
+        cashText.text = $"{to:N2} บาท";
     }
 }

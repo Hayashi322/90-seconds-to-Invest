@@ -20,7 +20,7 @@ public class Timer : NetworkBehaviour
     // ===== Config =====
     // ตอนเทสต์: จบเกมเมื่อครบ 1 phase
     // ถ้าเล่นจริงครบ 3 รอบ (9 phase) → เปลี่ยนเป็น 9
-    private const int EndPhaseCount = 9;
+    private const int EndPhaseCount = 1;
 
     // ===== Networked State =====
     private NetworkVariable<double> startTime =
@@ -42,6 +42,7 @@ public class Timer : NetworkBehaviour
     [Header("Round Canvas")]
     [SerializeField] private TextMeshProUGUI RoundText;
     [SerializeField] private TextMeshProUGUI PhaseText;
+    [SerializeField] private TextMeshProUGUI Taxwarning;
 
     [Header("Tax UI Panel (has TaxUI)")]
     [SerializeField] private GameObject taxPanel;
@@ -125,7 +126,7 @@ public class Timer : NetworkBehaviour
 
         switch (Phase)
         {
-            case 1: currentTime.Value = 90f; break;
+            case 1: currentTime.Value = 10f; break;
             case 2: currentTime.Value = 60f; break;
             case 3: currentTime.Value = 30f; break;
         }
@@ -179,6 +180,8 @@ public class Timer : NetworkBehaviour
 
         if (RoundText) RoundText.text = Round.ToString();
         if (PhaseText) PhaseText.text = Phase.ToString();
+        if (PhaseText.text == "3") Taxwarning.text = "อย่าลืมไปจ่ายภาษีที่สรรพากรนะ";
+        else Taxwarning.text = "";
 
         Invoke(nameof(CloseAllIntroPanels), 3f);
     }
