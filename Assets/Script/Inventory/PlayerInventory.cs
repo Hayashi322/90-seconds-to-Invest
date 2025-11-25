@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 using System.Collections;
-using UnityEditor.PackageManager;
+
 
 public class PlayerInventory : MonoBehaviour
 {

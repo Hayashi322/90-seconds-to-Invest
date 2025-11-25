@@ -88,7 +88,7 @@ public class Timer : NetworkBehaviour
         }
         else if (!timeUpTriggered)
         {
-            countdownText.text = "X";
+            countdownText.text = " ";
             timeUpTriggered = true;
 
             if (IsServer)
@@ -125,7 +125,7 @@ public class Timer : NetworkBehaviour
 
         switch (Phase)
         {
-            case 1: currentTime.Value = 90f; break;
+            case 1: currentTime.Value = 20f; break;
             case 2: currentTime.Value = 60f; break;
             case 3: currentTime.Value = 30f; break;
         }

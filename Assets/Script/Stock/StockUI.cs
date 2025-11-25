@@ -33,7 +33,7 @@ public class StockUI : MonoBehaviour
 
         float change = data.currentPrice - data.lastPrice;
         changeText.text = $"{(change >= 0 ? "+" : "")}{change:N2}";
-        changeText.color = change >= 0 ? Color.green : Color.red;
+        changeText.color = change >= 0 ?  Color.green : Color.red;
 
         // ✅ แสดงจำนวนหุ้นที่ถืออยู่ (ดึงจาก InventoryManager)
         int owned = 0;

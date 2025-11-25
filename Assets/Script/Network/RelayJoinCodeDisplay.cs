@@ -10,37 +10,58 @@ public class RelayJoinCodeDisplay : MonoBehaviour
     [SerializeField] private GameObject panel;      // กล่อง/Panel ที่โชว์โค้ด
 
     private RelayJoinCodeSync sync;
+    private bool isBound = false;                  // กันสมัคร event ซ้ำ
 
     private void OnEnable()
     {
+        // กันไม่ให้เหลือ coroutine เก่าค้าง
+        StopAllCoroutines();
+        isBound = false;
+
         StartCoroutine(BindRoutine());
     }
 
     private void OnDisable()
     {
-        if (sync != null)
+        // ยกเลิก event ถ้าเคย bind แล้ว
+        if (sync != null && isBound)
         {
             sync.JoinCode.OnValueChanged -= OnJoinCodeChanged;
         }
+
+        sync = null;
+        isBound = false;
     }
 
     private IEnumerator BindRoutine()
     {
-        // ✅ รอ Netcode เริ่ม
-        while (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+        // รอให้มี NetworkManager และเริ่มฟัง (Host / Client ต่อแล้ว)
+        while (isActiveAndEnabled &&
+               (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening))
+        {
             yield return null;
+        }
+        if (!isActiveAndEnabled) yield break;
 
-        // ✅ รอจนกว่าจะมี RelayJoinCodeSync ที่ Spawn แล้ว
-        while (RelayJoinCodeSync.Instance == null || !RelayJoinCodeSync.Instance.IsSpawned)
+        // รอจนกว่าจะมี RelayJoinCodeSync ที่ spawn แล้วในซีนนี้
+        while (isActiveAndEnabled &&
+               (RelayJoinCodeSync.Instance == null || !RelayJoinCodeSync.Instance.IsSpawned))
+        {
             yield return null;
+        }
+        if (!isActiveAndEnabled) yield break;
 
         sync = RelayJoinCodeSync.Instance;
 
-        // สมัคร event เวลา JoinCode เปลี่ยน
-        sync.JoinCode.OnValueChanged += OnJoinCodeChanged;
+        // ถ้าเคย bind แล้วไม่ต้องทำอีก
+        if (sync != null && !isBound)
+        {
+            sync.JoinCode.OnValueChanged += OnJoinCodeChanged;
+            isBound = true;
 
-        // เซ็ตค่าเริ่มต้น (เผื่อ Host เซ็ตไว้แล้ว)
-        OnJoinCodeChanged(default, sync.JoinCode.Value);
+            // เซ็ตค่าเริ่มต้น (กรณี Host เซ็ต JoinCode มาก่อนแล้ว)
+            OnJoinCodeChanged(default, sync.JoinCode.Value);
+        }
     }
 
     private void OnJoinCodeChanged(FixedString32Bytes oldVal, FixedString32Bytes newVal)
@@ -48,14 +69,18 @@ public class RelayJoinCodeDisplay : MonoBehaviour
         string code = newVal.ToString();
         Debug.Log($"[RelayUI] JoinCode changed to: {code}");
 
-        if (joinCodeText) joinCodeText.text = code;
-        if (panel) panel.SetActive(!string.IsNullOrEmpty(code));
+        if (joinCodeText)
+            joinCodeText.text = code;
+
+        if (panel)
+            panel.SetActive(!string.IsNullOrEmpty(code));
     }
 
-    // ปุ่ม Copy ยังใช้ได้เหมือนเดิม
+    // ปุ่ม Copy
     public void CopyJoinCode()
     {
         if (!joinCodeText) return;
+
         GUIUtility.systemCopyBuffer = joinCodeText.text;
         Debug.Log("[Relay] Join code copied.");
     }

@@ -6,12 +6,6 @@ public class NetworkDisconnectHandler : MonoBehaviour
 {
     [SerializeField] private string menuSceneName = "MainMenu";
 
-
-    /*private void Awake()
-    {
-        DontDestroyOnLoad(gameObject);
-    }*/
-
     private void OnEnable()
     {
         if (NetworkManager.Singleton != null)
@@ -31,20 +25,22 @@ public class NetworkDisconnectHandler : MonoBehaviour
 
         ulong localId = nm.LocalClientId;
 
-        // ========= กรณี 1: Host หลุด → Client ทุกคนออก =========
-        // Host มี clientId = 0 เสมอ
+        // ===== กรณี 1: Host หลุด → client ทุกคนกลับเมนู =====
+        // ใน NGO host (server) มี clientId = 0 เสมอ
         if (!nm.IsServer && clientId == 0)
         {
             Debug.Log("[Net] Host disconnected. Returning to menu...");
-            SceneManager.LoadScene(menuSceneName);
+            NetworkReturnToMenu.ReturnToMenu();
             return;
         }
 
-        // ========= กรณี 2: เราเองหลุด =========
+        // ===== กรณี 2: เราเองโดนตัด (จะเป็น host หรือ client ก็ได้) =====
         if (clientId == localId)
         {
             Debug.Log("[Net] Local player disconnected. Returning to menu...");
-            SceneManager.LoadScene(menuSceneName);
+            NetworkReturnToMenu.ReturnToMenu();
         }
     }
 }
+
+

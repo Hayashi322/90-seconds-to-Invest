@@ -124,13 +124,13 @@ public class InventoryManager : NetworkBehaviour
 
         if (cost <= 0)
         {
-            SendCasinoResultClientRpc(false, 0, 0, "Invalid cost.", target);
+            SendCasinoResultClientRpc(false, 0, 0, "วางเงินเดิมพันก่อน", target);
             return;
         }
 
         if (cash.Value < cost)
         {
-            SendCasinoResultClientRpc(false, 0, 0, "Not enough cash.", target);
+            SendCasinoResultClientRpc(false, 0, 0, "เงินไม่พอสำหรับการเดิมพัน", target);
             return;
         }
 
@@ -156,7 +156,7 @@ public class InventoryManager : NetworkBehaviour
 
         if (win)
         {
-            float reward = cost * 1.5f;
+            float reward = cost * 5f;
             cash.Value += reward;
         }
 

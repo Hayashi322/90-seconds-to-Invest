@@ -77,12 +77,25 @@ public class LotteryShopUI : MonoBehaviour
         while (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
             yield return null;
 
+        // ---------- รอ LotteryManager.Instance ให้ขึ้น ----------
         shop = LotteryManager.Instance;
-        if (shop == null)
+        int safetyFrame = 0;
+        while (shop == null)
         {
-            Debug.LogError("[LotteryUI] LotteryManager.Instance = null");
-            yield break;
+            safetyFrame++;
+            if (safetyFrame % 60 == 0)
+            {
+                Debug.LogWarning("[LotteryUI] ยังไม่เจอ LotteryManager.Instance กำลังรอ...");
+            }
+
+            shop = LotteryManager.Instance;
+            if (shop != null) break;
+
+            yield return null;
         }
+
+        // ตอนนี้ shop ไม่ null แล้ว
+        Debug.Log("[LotteryUI] Bind กับ LotteryManager สำเร็จ");
 
         var nm = NetworkManager.Singleton;
         var localObj = nm.SpawnManager.GetLocalPlayerObject();
