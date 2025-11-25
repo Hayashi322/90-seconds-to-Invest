@@ -54,7 +54,7 @@ public class TaxUI : MonoBehaviour
         if (inv != null) inv.cash.OnValueChanged -= OnAnyChanged;
     }
 
-    private void OnAnyChanged(float _, float __) => Refresh();
+    private void OnAnyChanged(double _, double __) => Refresh();
 
     private void Refresh()
     {
@@ -78,7 +78,7 @@ public class TaxUI : MonoBehaviour
 
         if (tax == null || inv == null) return;
 
-        float due = tax.unpaidTax.Value;
+        double due = tax.unpaidTax.Value;
 
         // 🔹 แสดงสถานะภาษี
         if (due <= 0f)

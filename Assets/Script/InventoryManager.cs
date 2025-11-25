@@ -46,7 +46,7 @@ public class InventoryManager : NetworkBehaviour
     public static InventoryManager Instance;
 
     // Server เขียน / Client อ่าน
-    public NetworkVariable<float> cash = new(
+    public NetworkVariable<double> cash = new(
         10_000_000f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public NetworkVariable<int> goldAmount = new(
@@ -59,7 +59,7 @@ public class InventoryManager : NetworkBehaviour
     public event Action<CasinoResult> CasinoResultReceived;
 
     // แจ้ง UI เรื่องเงินเปลี่ยน (previous, current) เฉพาะ local owner
-    public event Action<float, float> CashChanged;
+    public event Action<double, double> CashChanged;
 
     private void Awake()
     {
@@ -95,7 +95,7 @@ public class InventoryManager : NetworkBehaviour
         }
     }
 
-    private void OnCashValueChanged(float previous, float current)
+    private void OnCashValueChanged(double previous, double current)
     {
         if (IsOwner)
         {
@@ -112,7 +112,7 @@ public class InventoryManager : NetworkBehaviour
         var shop = GoldShopManager.Instance;
         int unitPrice = shop ? shop.BuyGoldPrice.Value : 50_000; // fallback
 
-        float cost = qty * unitPrice;
+        double cost = qty * unitPrice;
         if (cash.Value < cost) return;
 
         cash.Value -= cost;
@@ -179,7 +179,7 @@ public class InventoryManager : NetworkBehaviour
 
         if (win)
         {
-            float reward = cost * 5f;
+            double reward = cost * 5f;
             cash.Value += reward;
         }
 
@@ -214,11 +214,11 @@ public class InventoryManager : NetworkBehaviour
     //       Server-side Ops
     // ============================
     [ServerRpc(RequireOwnership = false)]
-    public void BuyGoldServerRpc(int qty, float price, ServerRpcParams rpcParams = default)
+    public void BuyGoldServerRpc(int qty, double price, ServerRpcParams rpcParams = default)
     {
         if (qty <= 0 || price <= 0) return;
 
-        float cost = qty * price;
+        double cost = qty * price;
         if (cash.Value >= cost)
         {
             cash.Value -= cost;
@@ -232,11 +232,11 @@ public class InventoryManager : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void BuyStockServerRpc(string stockName, int qty, float price, ServerRpcParams rpcParams = default)
+    public void BuyStockServerRpc(string stockName, int qty, double price, ServerRpcParams rpcParams = default)
     {
         if (string.IsNullOrEmpty(stockName) || qty <= 0 || price <= 0) return;
 
-        float cost = qty * price;
+        double cost = qty * price;
         if (cash.Value < cost)
         {
             Debug.Log($"[Inventory][Server] Buy STOCK failed (need {cost:N2}, has {cash.Value:N2})");

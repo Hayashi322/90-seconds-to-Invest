@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using System;
 
 public class GameOverResultController : MonoBehaviour
 {
@@ -90,7 +91,7 @@ public class GameOverResultController : MonoBehaviour
                 avatar = characterFullBodySprites[data.characterIndex];
             }
 
-            long cashAfter = Mathf.RoundToInt(data.finalNetworth);
+            long cashAfter = (int)Math.Round(data.finalNetworth); ;
             long cashBefore = data.lotteryWin ? (cashAfter - prizePerWinner) : cashAfter;
 
             var ui = Instantiate(playerResultPrefab, resultsParent);
@@ -143,7 +144,7 @@ public class GameOverResultController : MonoBehaviour
             if (!uiByClientId.TryGetValue(data.clientId, out var ui))
                 continue;
 
-            long cashAfter = Mathf.RoundToInt(data.finalNetworth);
+            long cashAfter = (int)Math.Round(data.finalNetworth);
             yield return ui.UpdateMoneyTo(cashAfter);
             yield return new WaitForSeconds(0.2f);
         }

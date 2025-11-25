@@ -113,7 +113,7 @@ public class casinoUI : MonoBehaviour
         if (amountInput) amountInput.interactable = canUse;
     }
 
-    private void OnCashChanged(float oldVal, float newVal)
+    private void OnCashChanged(double oldVal, double newVal)
     {
         if (money) money.text = $"{newVal:N0}";
     }

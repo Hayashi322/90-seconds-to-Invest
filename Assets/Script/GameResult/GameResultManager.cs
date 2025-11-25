@@ -27,12 +27,12 @@ public class GameResultManager : NetworkBehaviour
         public string playerName;
         public int characterIndex;
 
-        public float cash;
+        public double cash;
         public bool hasLottery;
         public int lotteryNumber;
         public bool lotteryWin;
 
-        public float finalNetworth;
+        public double finalNetworth;
     }
 
     public struct PlayerFinalResultNet : INetworkSerializable
@@ -41,12 +41,12 @@ public class GameResultManager : NetworkBehaviour
         public FixedString64Bytes playerName;
         public int characterIndex;
 
-        public float cash;
+        public double cash;
         public bool hasLottery;
         public int lotteryNumber;
         public bool lotteryWin;
 
-        public float finalNetworth;
+        public double finalNetworth;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
@@ -141,7 +141,7 @@ public class GameResultManager : NetworkBehaviour
             string name = LobbyManager.GetCachedPlayerName(clientId) ?? $"P{clientId}";
 
             int characterIndex = hero ? hero.CharacterIndex.Value : -1;
-            float cash = inv ? inv.cash.Value : 0f;
+            double cash = inv ? inv.cash.Value : 0f;
             bool hasTicket = lotto && lotto.HasTicket.Value;
             int ticketNumber = lotto ? lotto.TicketNumber.Value : -1;
             bool lottoWin = false;

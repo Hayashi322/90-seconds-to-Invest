@@ -63,7 +63,7 @@ public class GoldShopUI : MonoBehaviour
     // ===== handlers =====
     private void OnPriceChanged(int _, int __) => RefreshPrices();
     private void OnGoldChanged(int _, int __) => RefreshGold();
-    private void OnCashChanged(float _, float __) => RefreshCash();
+    private void OnCashChanged(double _, double __) => RefreshCash();
 
     // ===== refreshers =====
     private void RefreshAll()
