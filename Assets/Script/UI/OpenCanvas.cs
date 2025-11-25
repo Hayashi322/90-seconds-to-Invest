@@ -70,8 +70,8 @@ public class OpenCanvas : MonoBehaviour
     {
         if (!Application.isPlaying)
             TryAutoFillCanvases();
-#endif
     }
+#endif
 
     private void Update()
     {

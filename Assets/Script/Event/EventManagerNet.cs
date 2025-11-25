@@ -59,6 +59,7 @@ public class EventManagerNet : NetworkBehaviour
 
     /// <summary>
     /// เรียกเฉพาะ Server ตอนเข้า Phase 2 ของทุกเทิร์น
+    /// สุ่ม 2 Event โดย "ไม่ให้ซ้ำประเภทกัน" เช่น ทองขึ้น + ทองลง จะไม่ออกพร้อมกัน
     /// </summary>
     public void RollEventsForThisTurn()
     {
@@ -75,17 +76,76 @@ public class EventManagerNet : NetworkBehaviour
         currentEventIndices.Clear();
         HashSet<int> used = new HashSet<int>();
 
-        while (currentEventIndices.Count < 2 && used.Count < allEvents.Length)
+        int safety = 100; // กันลูปไม่จบ ถ้า config ไม่พอ
+
+        while (currentEventIndices.Count < 2 &&
+               used.Count < allEvents.Length &&
+               safety-- > 0)
         {
             int idx = UnityEngine.Random.Range(0, allEvents.Length);
-            if (used.Add(idx))
+
+            // กันสุ่ม index เดิมซ้ำ
+            if (!used.Add(idx))
+                continue;
+
+            var candidate = allEvents[idx];
+            if (candidate == null) continue;
+
+            // ---- เช็กว่า "ชนประเภท" กับที่เลือกไปแล้วหรือไม่ ----
+            bool conflict = false;
+
+            foreach (int existingIdx in currentEventIndices)
             {
-                currentEventIndices.Add(idx);
-                ApplyEventEffects(allEvents[idx]);
+                var existing = allEvents[existingIdx];
+                if (existing == null) continue;
+
+                if (IsSameMarketCategory(existing, candidate))
+                {
+                    // เช่น ทั้งคู่มี target = Gold หรือ ทั้งคู่มี StocksTech
+                    conflict = true;
+                    break;
+                }
             }
+
+            if (conflict)
+            {
+                // ข้ามตัวนี้ไป หาตัวใหม่
+                continue;
+            }
+
+            // ถ้าไม่ conflict → ใช้งานได้
+            currentEventIndices.Add(idx);
+            ApplyEventEffects(candidate);
         }
 
         Debug.Log($"[EventManagerNet] Rolled events: {string.Join(",", currentEventIndices)}");
+    }
+
+    /// <summary>
+    /// ใช้เช็กว่า event สองอันเป็น "ประเภทตลาดเดียวกัน" ไหม
+    /// เช่น ทั้งคู่ไปยุ่งกับ Gold, หรือทั้งคู่เป็น StocksTech เป็นต้น
+    /// </summary>
+    private bool IsSameMarketCategory(EventConfig a, EventConfig b)
+    {
+        if (a == null || b == null) return false;
+
+        foreach (var ea in a.effects)
+        {
+            foreach (var eb in b.effects)
+            {
+                // ถ้า target เหมือนกัน และเป็นประเภทตลาดหลัก ๆ ที่เราอยากกันไม่ให้ซ้ำ
+                if (ea.target == eb.target &&
+                    (ea.target == MarketTarget.Gold ||
+                     ea.target == MarketTarget.RealEstate ||
+                     ea.target == MarketTarget.StocksAll ||
+                     ea.target == MarketTarget.StocksTech ||
+                     ea.target == MarketTarget.StocksTourism))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void ResetMultipliers()
@@ -107,7 +167,7 @@ public class EventManagerNet : NetworkBehaviour
 
     private void ApplyEventEffects(EventConfig cfg)
     {
-        if (!IsServer) return;
+        if (!IsServer || cfg == null) return;
 
         foreach (var eff in cfg.effects)
         {
@@ -143,8 +203,7 @@ public class EventManagerNet : NetworkBehaviour
                         stockMultipliers[key] *= eff.multiplier;
                     break;
 
-                    // ถ้ามี target ใหม่ (เช่น ภาษี, คาสิโน, เงินอุดหนุน)
-                    // ให้ไปจัดการในระบบอื่น เช่น TaxManager / CasinoManager แยกต่างหาก
+                    // target พิเศษอย่าง ภาษี / คาสิโน ให้ไปจัดการในระบบอื่น
             }
         }
     }

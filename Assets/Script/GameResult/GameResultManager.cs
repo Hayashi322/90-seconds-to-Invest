@@ -8,10 +8,10 @@ public class GameResultManager : NetworkBehaviour
 {
     public static GameResultManager Instance { get; private set; }
 
-    // เก็บผลล่าสุดแบบข้าม Scene (static อยู่ได้ทุกเครื่อง)
+    // เก็บผลล่าสุดแบบข้าม Scene
     public static readonly List<PlayerFinalResult> LastResults = new List<PlayerFinalResult>();
 
-    // ✅ เลขรางวัลที่ 1 รอบล่าสุด
+    // เลขรางวัลที่ 1 รอบล่าสุด
     public static int LastWinningNumber { get; private set; } = -1;
 
     [Header("Scene Names")]
@@ -75,9 +75,7 @@ public class GameResultManager : NetworkBehaviour
         Instance = this;
     }
 
-    // ========================
     // เรียกจาก Timer (ฝั่ง Server เท่านั้น)
-    // ========================
     public void RequestGameOver()
     {
         if (!IsServer)
@@ -111,7 +109,7 @@ public class GameResultManager : NetworkBehaviour
             return;
         }
 
-        // ✅ ดึงเลขรางวัลที่ 1
+        // ดึงเลขรางวัลที่ 1
         if (LotteryManager.Instance != null)
         {
             LastWinningNumber = LotteryManager.Instance.WinningTicketNumber;
@@ -137,7 +135,6 @@ public class GameResultManager : NetworkBehaviour
             var lotto = playerObj.GetComponent<PlayerLotteryState>();
             var hero = playerObj.GetComponent<HeroControllerNet>();
 
-            // 👇 ดึงชื่อจาก LobbyManager.CachedNames ก่อน ถ้าไม่มีค่อย fallback เป็น P{clientId}
             string name = LobbyManager.GetCachedPlayerName(clientId) ?? $"P{clientId}";
 
             int characterIndex = hero ? hero.CharacterIndex.Value : -1;
@@ -173,7 +170,7 @@ public class GameResultManager : NetworkBehaviour
 
         Debug.Log($"[GRM] BuildResults done, count={finalResults.Count}");
 
-        // 1) เก็บไว้ในเครื่องตัวเอง
+        // 1) เก็บไว้ใน static ให้ทุก scene ใช้
         LastResults.Clear();
         foreach (var kvp in finalResults)
             LastResults.Add(kvp.Value);
@@ -224,6 +221,52 @@ public class GameResultManager : NetworkBehaviour
         }
 
         Debug.Log($"[GRM] ReceiveResultsClientRpc: count={LastResults.Count}");
+
+        // ส่งสกอร์ของ client เครื่องนี้ขึ้น Leaderboard
+        SubmitLocalPlayerToLeaderboard();
+    }
+
+    /// <summary>
+    /// หา result ของ client เครื่องนี้ แล้วส่งขึ้น Unity Cloud Leaderboards
+    /// </summary>
+    private async void SubmitLocalPlayerToLeaderboard()
+    {
+        var nm = NetworkManager.Singleton;
+        if (nm == null)
+        {
+            Debug.LogWarning("[GRM] Cannot submit leaderboard: NetworkManager is null.");
+            return;
+        }
+
+        ulong localId = nm.LocalClientId;
+
+        bool found = false;
+        PlayerFinalResult myResult = default;
+
+        foreach (var r in LastResults)
+        {
+            if (r.clientId == localId)
+            {
+                myResult = r;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            Debug.LogWarning("[GRM] Local result not found for leaderboard submit.");
+            return;
+        }
+
+        string playerName = string.IsNullOrEmpty(myResult.playerName)
+            ? $"P{localId}"
+            : myResult.playerName;
+
+        float score = (float)myResult.finalNetworth;
+
+        await LeaderboardSubmitter.SubmitScoreAsync(score, playerName);
+        Debug.Log($"[GRM] Leaderboard submit: {playerName} score={score}");
     }
 
     private void LoadGameOverScene()
@@ -242,7 +285,6 @@ public class GameResultManager : NetworkBehaviour
         }
     }
 
-    // ✅ เรียกตอนกลับเมนู / เริ่มเกมใหม่
     public static void ResetStatics()
     {
         LastResults.Clear();

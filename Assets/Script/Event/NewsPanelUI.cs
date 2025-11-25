@@ -59,6 +59,10 @@ public class NewsPanelUI : MonoBehaviour
     // เรียกจากปุ่มไอคอนข่าว
     public void OpenNews()
     {
+        // บอกไอคอนว่าผู้เล่นดูข่าวแล้ว ให้หยุดสั่น
+        if (NewsIconNotifier.Instance != null)
+            NewsIconNotifier.Instance.MarkEventsSeen();
+
         if (isAnimating || isOpen) return;
 
         RefreshUI();

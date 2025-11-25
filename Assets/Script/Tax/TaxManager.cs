@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Unity.Netcode;
 using System;
+
 public class TaxManager : NetworkBehaviour
 {
     public static TaxManager Instance;
@@ -40,14 +41,14 @@ public class TaxManager : NetworkBehaviour
 
         for (int i = 0; i < caps.Length && taxable > 0f; i++)
         {
-            double span = caps[i] - prevCap;         // ช่วงกว้างของชั้นนี้
+            double span = caps[i] - prevCap;       // ช่วงกว้างของชั้นนี้
             double use = Math.Min(taxable, span);  // ส่วนที่ตกในชั้นนี้จริง
             tax += use * rates[i];
             taxable -= use;
             prevCap = caps[i];
         }
 
-        if (taxable > 0f)                           // ส่วนที่เกิน 5M
+        if (taxable > 0f)                         // ส่วนที่เกิน 5M
             tax += taxable * rates[rates.Length - 1];
 
         effRate = (baseAmount <= 0f) ? 0f : (tax / baseAmount);
@@ -70,11 +71,17 @@ public class TaxManager : NetworkBehaviour
 
         double baseAmount = Math.Max(0f, inv.cash.Value); // proxy รายได้
         double eff;
-        double due = CalcProgressiveTax(baseAmount, out eff);
-       
+
+        // 📌 คิดภาษีของรอบนี้
+        double currentDue = CalcProgressiveTax(baseAmount, out eff);
+
+        // 📌 ดึงยอดค้างเก่ามาบวกกับยอดใหม่ → กลายเป็นยอดค้างสะสม
+        double oldDue = taxMgr.unpaidTax.Value;
+        taxMgr.unpaidTax.Value = oldDue + currentDue;
+
+        // เก็บฐานที่ใช้คิดและ effective rate ของ "รอบล่าสุด"
         taxMgr.taxableBase.Value = baseAmount;
         taxMgr.effectiveRate.Value = eff;
-        taxMgr.unpaidTax.Value = due;
     }
 
     // กดชำระภาษี — อนุญาตเฉพาะ Phase 3
@@ -97,6 +104,6 @@ public class TaxManager : NetworkBehaviour
         if (due <= 0f || inv.cash.Value < due) return;
 
         inv.cash.Value -= due;
-        taxMgr.unpaidTax.Value = 0f; // ชำระแล้ว
+        taxMgr.unpaidTax.Value = 0f; // ชำระแล้ว เคลียร์หนี้
     }
 }
