@@ -17,7 +17,7 @@ public class GameResultManager : NetworkBehaviour
     [SerializeField] private string gameOverSceneName = "GameOver";
 
     [Header("Lottery Prize")]
-    [SerializeField] private int lotteryPrize = 6000000;
+    [SerializeField] private int lotteryPrize = 6_000_000;
 
     // ========================
     // Struct ฝั่ง Gameplay (ใช้ในโค้ดปกติ)
@@ -78,7 +78,6 @@ public class GameResultManager : NetworkBehaviour
             return;
         }
         Instance = this;
-
         // เป็น Scene Object ของ GameSceneNet พอ ไม่ต้อง DontDestroyOnLoad
     }
 
@@ -104,7 +103,6 @@ public class GameResultManager : NetworkBehaviour
         Debug.Log("[GRM] ProceedToGameOver()");
 
         BuildResultsAndBroadcast();   // รวบรวม + ส่งให้ทุก client
-
         LoadGameOverScene();         // แล้วค่อยย้ายไป GameOver
     }
 
@@ -148,7 +146,37 @@ public class GameResultManager : NetworkBehaviour
             var lotto = playerObj.GetComponent<PlayerLotteryState>();
             var hero = playerObj.GetComponent<HeroControllerNet>();
 
-            string name = $"P{clientId}";
+            // =========================
+            // ✅ หาชื่อผู้เล่นจาก Lobby / PlayerData / PlayerPrefs
+            // =========================
+            string name = null;
+
+            // 1) จาก LobbyManager cache (ทุกเครื่องใช้เหมือนกัน)
+            name = LobbyManager.GetCachedPlayerName(clientId);
+
+            // 2) ถ้าเป็น local player และยังไม่มีชื่อ ลองดึงจาก PlayerData / PlayerPrefs
+            if (string.IsNullOrWhiteSpace(name) &&
+                NetworkManager.Singleton != null &&
+                NetworkManager.Singleton.LocalClientId == clientId)
+            {
+                if (PlayerData.Instance != null &&
+                    !string.IsNullOrWhiteSpace(PlayerData.Instance.playerName))
+                {
+                    name = PlayerData.Instance.playerName;
+                }
+                else
+                {
+                    name = PlayerPrefs.GetString("player_name", "");
+                }
+            }
+
+            // 3) fallback สุดท้าย
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                name = $"P{clientId}";
+            }
+            // =========================
+
             if (hero == null)
             {
                 Debug.LogWarning($"[GRM] HeroControllerNet missing on {clientId}");

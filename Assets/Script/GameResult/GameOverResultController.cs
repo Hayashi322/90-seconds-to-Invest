@@ -23,11 +23,18 @@ public class GameOverResultController : MonoBehaviour
     [Header("Lottery Prize (ควรให้เท่ากับ GameResultManager.lotteryPrize)")]
     [SerializeField] private int prizePerWinner = 6_000_000;
 
+    [Header("Menu / Exit Button")]
+    [SerializeField] private GameObject exitButtonRoot;     // ปุ่มออก/กลับเมนูในฉาก GameOver
+
     private readonly Dictionary<ulong, PlayerResultUI> uiByClientId =
         new Dictionary<ulong, PlayerResultUI>();
 
     private void Start()
     {
+        // ตอนเข้า Scene ให้ซ่อนปุ่มออกไว้ก่อน
+        if (exitButtonRoot != null)
+            exitButtonRoot.SetActive(false);
+
         StartCoroutine(FlowRoutine());
     }
 
@@ -156,6 +163,13 @@ public class GameOverResultController : MonoBehaviour
             else if (rank == 3 && rank3Badge) ui.SetRankBadge(rank3Badge);
 
             rank++;
+        }
+
+        // ✅ สรุปผลเสร็จแล้ว → ค่อยให้กดปุ่มออก/กลับเมนูได้
+        if (exitButtonRoot != null)
+        {
+            yield return new WaitForSeconds(2f);
+            exitButtonRoot.SetActive(true);
         }
     }
 }

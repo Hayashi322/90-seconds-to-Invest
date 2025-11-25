@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;   // สำคัญ
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
@@ -8,8 +9,11 @@ public class LobbyManager : NetworkBehaviour
 {
     public static LobbyManager Instance;
 
+    // 👇 cache ชื่อทุกคนแบบ static อยู่ได้ข้าม Scene (ทุกเครื่องจะมีเหมือนกัน)
+    public static readonly Dictionary<ulong, string> CachedNames = new();
+
     [Header("Character Catalog (index ต้องตรงกับรูปใน UI)")]
-    public string[] characterNames; // เช่น ["Hero A","Hero B","Hero C","Hero D"]
+    public string[] characterNames;
 
     [Serializable]
     public struct PlayerStateNet : INetworkSerializable, IEquatable<PlayerStateNet>
@@ -30,9 +34,9 @@ public class LobbyManager : NetworkBehaviour
         public bool Equals(PlayerStateNet other)
         {
             return clientId == other.clientId
-                && playerName.Equals(other.playerName)
-                && characterIndex == other.characterIndex
-                && ready == other.ready;
+                   && playerName.Equals(other.playerName)
+                   && characterIndex == other.characterIndex
+                   && ready == other.ready;
         }
     }
 
@@ -51,11 +55,22 @@ public class LobbyManager : NetworkBehaviour
         // --- ฝั่ง Client: ส่งชื่อที่เซฟไว้ขึ้น Server ---
         if (IsClient)
         {
-            string savedName = PlayerPrefs.GetString("player_name", "");
+            string savedName = null;
+
+            // 1) ดึงจาก PlayerData ก่อน
+            if (PlayerData.Instance != null &&
+                !string.IsNullOrWhiteSpace(PlayerData.Instance.playerName))
+            {
+                savedName = PlayerData.Instance.playerName;
+            }
+            else
+            {
+                // 2) fallback ไปที่ PlayerPrefs
+                savedName = PlayerPrefs.GetString("player_name", "");
+            }
 
             if (!string.IsNullOrWhiteSpace(savedName))
             {
-                // เรียก ServerRpc ที่มีอยู่แล้ว
                 SetNameServerRpc(savedName);
             }
         }
@@ -73,10 +88,25 @@ public class LobbyManager : NetworkBehaviour
         }
     }
 
-
     public override void OnNetworkDespawn()
     {
         base.OnNetworkDespawn();
+
+        // ✅ ก่อนถูก Despawn ให้ก็อปชื่อทั้งหมดใส่ CachedNames บน "ทุกเครื่อง"
+        // เพราะ NetworkList players จะหายไปหลังจากนี้
+        if (players != null)
+        {
+            CachedNames.Clear();
+            for (int i = 0; i < players.Count; i++)
+            {
+                var p = players[i];
+                var n = p.playerName.ToString();
+                if (!string.IsNullOrWhiteSpace(n))
+                {
+                    CachedNames[p.clientId] = n;
+                }
+            }
+        }
 
         if (IsServer && NetworkManager.Singleton != null)
         {
@@ -84,6 +114,7 @@ public class LobbyManager : NetworkBehaviour
             NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
         }
 
+        // ไม่ต้องเคลียร์ CachedNames เพราะจะใช้ต่อใน GameScene
         players = null;
         if (Instance == this) Instance = null;
     }
@@ -99,14 +130,19 @@ public class LobbyManager : NetworkBehaviour
                 return;
         }
 
+        string defaultName = $"P{clientId}";
+
         var ps = new PlayerStateNet
         {
             clientId = clientId,
-            playerName = (FixedString32Bytes)$"P{clientId}",
+            playerName = (FixedString32Bytes)defaultName,
             characterIndex = -1,
             ready = false
         };
         players.Add(ps);
+
+        // เซ็ต default ลง cache ไว้ก่อน (เผื่อกรณีชื่อจริงยังไม่มา)
+        CachedNames[clientId] = defaultName;
     }
 
     private void OnClientDisconnected(ulong clientId)
@@ -117,10 +153,11 @@ public class LobbyManager : NetworkBehaviour
         {
             if (players[i].clientId == clientId)
             {
-                // ลบออกจากลิสต์ → ตัวละครที่เขาเลือกจะถูกคืนให้ว่างอัตโนมัติ
                 players.RemoveAt(i);
             }
         }
+
+        CachedNames.Remove(clientId);
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -133,8 +170,12 @@ public class LobbyManager : NetworkBehaviour
             if (players[i].clientId == cid)
             {
                 var p = players[i];
-                p.playerName = (FixedString32Bytes)(string.IsNullOrWhiteSpace(name) ? $"P{cid}" : name.Trim());
+                string finalName = string.IsNullOrWhiteSpace(name) ? $"P{cid}" : name.Trim();
+                p.playerName = (FixedString32Bytes)finalName;
                 players[i] = p;
+
+                // อัปเดต cache ด้วย
+                CachedNames[cid] = finalName;
                 break;
             }
         }
@@ -160,10 +201,9 @@ public class LobbyManager : NetworkBehaviour
             {
                 var p = players[i];
                 p.characterIndex = charIndex;
-                p.ready = false; // เปลี่ยนตัวละครแล้วให้ไม่พร้อม
+                p.ready = false;
                 players[i] = p;
 
-                // ส่งตัวละครไปให้ HeroControllerNet ของ player นี้ใช้ในเกมจริง
                 ApplyCharacterToHero(cid, charIndex);
                 break;
             }
@@ -195,7 +235,6 @@ public class LobbyManager : NetworkBehaviour
             {
                 var p = players[i];
 
-                // ต้องเลือกตัวละครก่อนถึงจะ Ready ได้
                 if (p.characterIndex >= 0)
                     p.ready = ready;
 
@@ -227,5 +266,16 @@ public class LobbyManager : NetworkBehaviour
 
         Debug.Log("[Lobby] All players ready → Loading GameSceneNet");
         NetworkManager.SceneManager.LoadScene("GameSceneNet", LoadSceneMode.Single);
+    }
+
+    // helper ใช้จาก scene อื่น
+    public static string GetCachedPlayerName(ulong clientId)
+    {
+        if (CachedNames.TryGetValue(clientId, out var n) &&
+            !string.IsNullOrWhiteSpace(n))
+        {
+            return n;
+        }
+        return null;
     }
 }

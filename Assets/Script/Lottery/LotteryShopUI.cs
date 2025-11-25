@@ -21,7 +21,10 @@ public class LotteryShopUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI priceText;    // แสดง "หวย รวย\nใบละ 120"
 
     [Header("Buy Button")]
-    [SerializeField] private Button buyButton;             // ปุ่ม "ซื้อ" แยกต่างหาก
+    [SerializeField] private Button buyButton;             // ปุ่ม "ซื้อ"
+    [SerializeField] private Image buyButtonImage;         // รูปบนปุ่มซื้อ
+    [SerializeField] private Sprite buyDisabledSprite;     // รูปตอนกดไม่ได้
+    [SerializeField] private Sprite buyEnabledSprite;      // รูปตอนกดได้
 
     private InventoryManager inv;
     private PlayerLotteryState lottery;
@@ -46,9 +49,16 @@ public class LotteryShopUI : MonoBehaviour
         if (buyButton != null)
             buyButton.onClick.RemoveListener(OnClickBuy);
     }
+
     private void Update()
     {
-        InvTicketNumber.text = $"{lottery.TicketNumber.Value}";
+        if (lottery != null && InvTicketNumber != null)
+        {
+            if (lottery.HasTicket.Value)
+                InvTicketNumber.text = $"{lottery.TicketNumber.Value:000000}";
+            else
+                InvTicketNumber.text = "------";
+        }
     }
 
     private IEnumerator BindLocalAndInitRoutine()
@@ -130,7 +140,9 @@ public class LotteryShopUI : MonoBehaviour
             buyButton.onClick.RemoveAllListeners();
             buyButton.onClick.AddListener(OnClickBuy);
 
-
+            // ถ้าไม่ได้ลาก buyButtonImage มา ให้ดึงจากตัวปุ่มเอง
+            if (buyButtonImage == null)
+                buyButtonImage = buyButton.GetComponent<Image>();
         }
         else
         {
@@ -209,9 +221,19 @@ public class LotteryShopUI : MonoBehaviour
         bool canBuy = !lottery.HasTicket.Value
                       && selectedIndex >= 0
                       && shop != null
-                      && selectedIndex < shop.Slots.Count;
+                      && selectedIndex < shop.Slots.Count
+                      && inv != null
+                      && inv.cash.Value >= shop.TicketPrice;
 
         buyButton.interactable = canBuy;
+
+        if (buyButtonImage != null)
+        {
+            if (canBuy && buyEnabledSprite != null)
+                buyButtonImage.sprite = buyEnabledSprite;
+            else if (!canBuy && buyDisabledSprite != null)
+                buyButtonImage.sprite = buyDisabledSprite;
+        }
     }
 
     // =========================
@@ -255,10 +277,6 @@ public class LotteryShopUI : MonoBehaviour
 
     public void AddInventory()
     {
-        /* var rep = shop.Slots*/
-
         CanvasGroup.alpha = 1;
-
     }
-
 }
