@@ -16,6 +16,9 @@ public class NameSaveUI : MonoBehaviour
     [SerializeField] private float flashTime = 0.15f;
     [SerializeField] private int flashCount = 3;
 
+    [Header("Name Limit")]
+    [SerializeField] private int maxNameLength = 14;        // ✅ จำกัดชื่อไม่เกิน 14 ตัวอักษร
+
     private const string PlayerNameKey = "player_name";
 
     private Color _originalColor;
@@ -23,8 +26,23 @@ public class NameSaveUI : MonoBehaviour
 
     private void Start()
     {
+        // ตั้ง limit ให้ช่องกรอกชื่อ
+        if (nameInput)
+        {
+            nameInput.characterLimit = maxNameLength;
+        }
+
         // โหลดชื่อที่เคยเซฟไว้ (ถ้ามี)
         string savedName = PlayerPrefs.GetString(PlayerNameKey, "");
+
+        // ถ้าชื่อที่เคยเซฟยาวเกิน – ตัดให้เหลือไม่เกิน maxNameLength
+        if (!string.IsNullOrEmpty(savedName) &&
+            maxNameLength > 0 &&
+            savedName.Length > maxNameLength)
+        {
+            savedName = savedName.Substring(0, maxNameLength);
+        }
+
         if (nameInput) nameInput.text = savedName;
 
         // เตรียม target สำหรับกระพริบ
@@ -51,6 +69,13 @@ public class NameSaveUI : MonoBehaviour
         {
             ShowEmptyNameWarning();
             return;
+        }
+
+        // ✅ กันเหนียว ตัดให้ไม่เกิน maxNameLength อีกชั้น
+        if (maxNameLength > 0 && playerName.Length > maxNameLength)
+        {
+            playerName = playerName.Substring(0, maxNameLength);
+            if (nameInput) nameInput.text = playerName; // อัปเดตกลับให้ผู้เล่นเห็น
         }
 
         // บันทึกชื่อไว้ใน PlayerPrefs
@@ -83,6 +108,13 @@ public class NameSaveUI : MonoBehaviour
         {
             ShowEmptyNameWarning();
             return false;
+        }
+
+        // ✅ ตัดไม่เกิน maxNameLength
+        if (maxNameLength > 0 && playerName.Length > maxNameLength)
+        {
+            playerName = playerName.Substring(0, maxNameLength);
+            if (nameInput) nameInput.text = playerName;
         }
 
         // มีชื่อแล้ว แต่ยังไม่กดเซฟ → เซฟให้เลย

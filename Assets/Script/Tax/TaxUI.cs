@@ -18,23 +18,41 @@ public class TaxUI : MonoBehaviour
     private TaxManager tax;
     private InventoryManager inv;
 
+    // ถูกเปิดแบบ “โดนสรรพากรบังคับ” หรือเปล่า
+    private bool forceMode = false;
+
     private void Awake()
     {
-        if (payButton) payButton.onClick.AddListener(OnPay);
-        if (closeButton) closeButton.onClick.AddListener(() => gameObject.SetActive(false));
+        if (payButton)
+            payButton.onClick.AddListener(OnPay);
+
+        if (closeButton)
+            closeButton.onClick.AddListener(OnClickClose);
     }
 
-    private void OnEnable() => StartCoroutine(BindWhenReady());
-    private void OnDisable() => Unsubscribe();
+    private void OnEnable()
+    {
+        StartCoroutine(BindWhenReady());
+    }
+
+    private void OnDisable()
+    {
+        Unsubscribe();
+    }
 
     private IEnumerator BindWhenReady()
     {
-        while (InventoryManager.Instance == null) yield return null;
+        // รอให้ InventoryManager พร้อม
+        while (InventoryManager.Instance == null)
+            yield return null;
         inv = InventoryManager.Instance;
 
-        while (TaxManager.Instance == null) yield return null;
+        // รอให้ TaxManager พร้อม
+        while (TaxManager.Instance == null)
+            yield return null;
         tax = TaxManager.Instance;
 
+        // subscribe network vars
         tax.unpaidTax.OnValueChanged += OnAnyChanged;
         tax.taxableBase.OnValueChanged += OnAnyChanged;
         tax.effectiveRate.OnValueChanged += OnAnyChanged;
@@ -51,10 +69,17 @@ public class TaxUI : MonoBehaviour
             tax.taxableBase.OnValueChanged -= OnAnyChanged;
             tax.effectiveRate.OnValueChanged -= OnAnyChanged;
         }
-        if (inv != null) inv.cash.OnValueChanged -= OnAnyChanged;
+
+        if (inv != null)
+        {
+            inv.cash.OnValueChanged -= OnAnyChanged;
+        }
     }
 
-    private void OnAnyChanged(double _, double __) => Refresh();
+    private void OnAnyChanged(double _, double __)
+    {
+        Refresh();
+    }
 
     private void Refresh()
     {
@@ -71,7 +96,8 @@ public class TaxUI : MonoBehaviour
             }
             else
             {
-                phaseHintText.text = $"สามารถชำระภาษีได้เฉพาะเฟส 3 เท่านั้น (ขณะนี้อยู่เฟส {Mathf.Max(phase, 1)})";
+                phaseHintText.text =
+                    $"สามารถชำระภาษีได้เฉพาะเฟส 3 เท่านั้น (ขณะนี้อยู่เฟส {Mathf.Max(phase, 1)})";
                 phaseHintText.color = new Color(1.00f, 0.80f, 0.25f);
             }
         }
@@ -97,6 +123,10 @@ public class TaxUI : MonoBehaviour
         if (rateText) rateText.text = $"จ่ายภาษี: {tax.effectiveRate.Value:P0}";
     }
 
+    // =========================================================
+    //  ปุ่ม / การกระทำ
+    // =========================================================
+
     private void OnPay()
     {
         if (tax == null) return;
@@ -111,7 +141,37 @@ public class TaxUI : MonoBehaviour
         tax.PayTaxServerRpc(); // Server จะตัดเงินและอัปเดตสถานะให้เอง
     }
 
-    // ปุ่มเสริม — สำหรับคำนวณภาษีใหม่ (ถ้าต้องการ)
+    // ปุ่มกากบาท
+    private void OnClickClose()
+    {
+        // ถ้าโดนบังคับ (จาก Event สรรพากร) และยังมีหนี้ภาษี → ห้ามปิด
+        if (forceMode &&
+            TaxManager.Instance != null &&
+            TaxManager.Instance.unpaidTax.Value > 0)
+        {
+            Debug.Log("[TaxUI] คุณต้องจ่ายภาษีก่อนถึงจะปิดหน้าต่างนี้ได้");
+            return;
+        }
+
+        forceMode = false;
+        gameObject.SetActive(false);
+    }
+
+    // เปิดแบบปกติ (ผู้เล่นกดจากเมนู)
+    public void OpenNormal()
+    {
+        forceMode = false;
+        gameObject.SetActive(true);
+    }
+
+    // เปิดแบบบังคับ (เรียกจาก EventManagerNet → Event “กรมสรรพากรเข้าตรวจสอบ!”)
+    public void OpenForceMode()
+    {
+        forceMode = true;
+        gameObject.SetActive(true);
+    }
+
+    // ปุ่มเสริม — สำหรับคำนวณภาษีใหม่ (ถ้าต้องการเรียกจากปุ่ม Dev)
     public void CalculateThisPhase()
     {
         if (tax == null) return;

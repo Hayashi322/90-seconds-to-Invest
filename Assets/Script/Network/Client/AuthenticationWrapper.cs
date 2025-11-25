@@ -16,132 +16,116 @@ public static class AuthenticationWrapper
 {
     public static AuthState AuthState { get; private set; } = AuthState.NotAuthenticated;
 
-    // ใช้ cache Task เพื่อกันการเรียกซ้ำพร้อมกัน
-    private static Task<AuthState> _authTask;
+    // กันไม่ให้ DoAuth() ถูกเรียกซ้อนพร้อมกันหลายครั้ง
+    private static Task<AuthState> _currentAuthTask;
 
-    /// <summary>
-    /// ให้ทุกที่ในโปรเจกต์เรียกเมธอดนี้เท่านั้นเวลาอยากให้ Auth
-    /// </summary>
     public static Task<AuthState> DoAuth(int maxRetries = 5)
     {
-        // ถ้าเคย Auth สำเร็จแล้วก็คืนค่าเลย
+        // ถ้าเคย sign-in แล้วก็รีเทิร์นเลย
         if (AuthState == AuthState.Authenticated)
-        {
             return Task.FromResult(AuthState);
-        }
 
-        // ถ้ามี Task เก่าที่กำลังรันอยู่ ให้รออันเดิม
-        if (_authTask == null || _authTask.IsCompleted)
-        {
-            _authTask = DoAuthInternal(maxRetries);
-        }
+        // ถ้ามี task Auth กำลังรันอยู่ ให้ใช้ task เดิม
+        if (_currentAuthTask != null && !_currentAuthTask.IsCompleted)
+            return _currentAuthTask;
 
-        return _authTask;
+        _currentAuthTask = DoAuthInternal(maxRetries);
+        return _currentAuthTask;
     }
-
-    // ===== ภายใน =====
 
     private static async Task<AuthState> DoAuthInternal(int maxRetries)
     {
-        // กันไม่ให้หลายที่เรียกพร้อมกันโดยไม่จำเป็น
-        if (AuthState == AuthState.Authenticated)
-            return AuthState;
-
-        // 1) Initialize Unity Services ถ้ายังไม่เคยทำ
-        if (UnityServices.State == ServicesInitializationState.Uninitialized)
-        {
-            await UnityServices.InitializeAsync();
-        }
-
-        // 2) ถ้ามีคนอื่น sign-in ไปแล้ว ให้ใช้สถานะนั้นเลย
-        if (AuthenticationService.Instance.IsSignedIn &&
-            AuthenticationService.Instance.IsAuthorized)
-        {
-            AuthState = AuthState.Authenticated;
-            Debug.Log("[AuthWrapper] Already signed in (from other system).");
-            return AuthState;
-        }
-
         AuthState = AuthState.Authenticating;
 
-        int retries = 0;
-
-        while (retries < maxRetries && AuthState == AuthState.Authenticating)
+        try
         {
-            try
+            // --- Initialize UGS ---
+            if (UnityServices.State == ServicesInitializationState.Uninitialized ||
+                UnityServices.State == ServicesInitializationState.Initializing)
             {
-                // ถ้ายังไม่ signed-in จริง ๆ ค่อยเรียก SignIn
-                if (!AuthenticationService.Instance.IsSignedIn)
+                await UnityServices.InitializeAsync();
+            }
+
+            // ถ้า sign-in อยู่แล้วไม่ต้องทำอะไร
+            if (AuthenticationService.Instance.IsSignedIn &&
+                AuthenticationService.Instance.IsAuthorized)
+            {
+                Debug.Log($"[Auth] Already signed in as {AuthenticationService.Instance.PlayerId}");
+                AuthState = AuthState.Authenticated;
+                return AuthState;
+            }
+
+            int retries = 0;
+
+            while (retries < maxRetries &&
+                   !(AuthenticationService.Instance.IsSignedIn && AuthenticationService.Instance.IsAuthorized))
+            {
+                try
                 {
-                    Debug.Log($"[AuthWrapper] SignIn attempt {retries + 1} ...");
                     await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                }
+                catch (AuthenticationException ex)
+                {
+                    // เคสคลาสสิก: "The player is already signing in."
+                    Debug.LogWarning($"[Auth] AuthenticationException: {ex.Message}");
+
+                    // ถ้าข้อความบอกว่า already signing in ให้รอเฉย ๆ แล้วคอยเช็คสถานะ
+                    if (ex.Message != null && ex.Message.Contains("already signing in"))
+                    {
+                        // รอให้การ sign-in ที่ไหนสักแห่งเสร็จก่อน
+                        int waitLoops = 0;
+                        while (!AuthenticationService.Instance.IsSignedIn &&
+                               waitLoops < 20) // รอสูงสุด ~2 วินาที
+                        {
+                            await Task.Delay(100);
+                            waitLoops++;
+                        }
+
+                        if (AuthenticationService.Instance.IsSignedIn &&
+                            AuthenticationService.Instance.IsAuthorized)
+                        {
+                            AuthState = AuthState.Authenticated;
+                            Debug.Log($"[Auth] Signed in (other caller). PlayerId={AuthenticationService.Instance.PlayerId}");
+                            return AuthState;
+                        }
+                    }
+
+                    AuthState = AuthState.Error;
+                }
+                catch (RequestFailedException ex)
+                {
+                    Debug.LogError($"[Auth] RequestFailedException: {ex}");
+                    AuthState = AuthState.Error;
                 }
 
                 if (AuthenticationService.Instance.IsSignedIn &&
                     AuthenticationService.Instance.IsAuthorized)
                 {
                     AuthState = AuthState.Authenticated;
-                    Debug.Log($"[AuthWrapper] Signed in. PlayerId = {AuthenticationService.Instance.PlayerId}");
-                    break;
+                    Debug.Log($"[Auth] Signed in, playerId = {AuthenticationService.Instance.PlayerId}");
+                    return AuthState;
                 }
-            }
-            catch (AuthenticationException ex)
-            {
-                // เคสสำคัญ: Player is already signing in → แปลว่ามีคนอื่นเรียกอยู่แล้ว
-                if (ex.Message != null &&
-                    ex.Message.ToLower().Contains("already signing in"))
-                {
-                    Debug.LogWarning("[AuthWrapper] Already signing in somewhere else, waiting...");
 
-                    // รอให้การ sign-in ที่อื่นเสร็จแทน
-                    int waitMs = 0;
-                    while (!AuthenticationService.Instance.IsSignedIn &&
-                           waitMs < 5000)   // รอสูงสุด ~5 วิ
-                    {
-                        await Task.Delay(200);
-                        waitMs += 200;
-                    }
-
-                    if (AuthenticationService.Instance.IsSignedIn &&
-                        AuthenticationService.Instance.IsAuthorized)
-                    {
-                        AuthState = AuthState.Authenticated;
-                        Debug.Log("[AuthWrapper] Sign-in finished while waiting.");
-                        break;
-                    }
-                }
-                else
-                {
-                    Debug.LogError(ex);
-                    AuthState = AuthState.Error;
-                }
-            }
-            catch (RequestFailedException ex)
-            {
-                Debug.LogError(ex);
-                AuthState = AuthState.Error;
+                retries++;
+                await Task.Delay(1000);
             }
 
-            if (AuthState == AuthState.Authenticated)
-                break;
-
-            retries++;
-            await Task.Delay(1000);
-        }
-
-        // สรุปผลรอบสุดท้าย
-        if (AuthState != AuthState.Authenticated)
-        {
             if (AuthenticationService.Instance.IsSignedIn &&
                 AuthenticationService.Instance.IsAuthorized)
             {
                 AuthState = AuthState.Authenticated;
+                Debug.Log($"[Auth] Signed in, playerId = {AuthenticationService.Instance.PlayerId}");
             }
             else
             {
-                Debug.LogWarning($"[AuthWrapper] Player was not signed in successfully after {retries} retries");
+                Debug.LogWarning($"[Auth] Player was not signed in successfully after {retries} retries");
                 AuthState = AuthState.TimeOut;
             }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[Auth] Unexpected error: {e}");
+            AuthState = AuthState.Error;
         }
 
         return AuthState;

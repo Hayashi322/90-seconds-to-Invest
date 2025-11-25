@@ -394,7 +394,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 7898319712133852494, guid: 23865dca47e811845ba310309f791661, type: 3}
+  m_Sprite: {fileID: 8356569790972587181, guid: c1746611ba818234fbe52324ad367a37, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -607,7 +607,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 70.6
+  m_fontSize: 65.2
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -645,7 +645,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: -7.939026, y: -69.346985, z: -5.795166, w: 5.784485}
+  m_margin: {x: -0.57232666, y: -56.45514, z: -0.27001953, w: 5.784485}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -915,7 +915,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0bda2cc99fc093e4bbd28fc30e97ddc9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  leaderboardId: top_networth
   rowsParent: {fileID: 743161453}
   rowPrefab: {fileID: 2762813315375881872, guid: da396e3611e9d114c98de479739c86e9, type: 3}
   statusText: {fileID: 422745392}

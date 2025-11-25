@@ -16,6 +16,9 @@ public class RealEstateManager : NetworkBehaviour
     [SerializeField] private int minPrice = 5_000_000;
     [SerializeField] private int maxPrice = 20_000_000;
 
+    // ✅ ราคาต่ำสุดที่ยอมให้ลงได้เมื่อโดนอีเว้นหนัก ๆ (เช่น ฟองสบู่แตก)
+    [SerializeField] private int eventMinPrice = 1_000_000;
+
     [Header("Volatility (±k per tick)")]
     [SerializeField] private int tickK = 50;
 
@@ -109,12 +112,14 @@ public class RealEstateManager : NetworkBehaviour
             int delta = UnityEngine.Random.Range(-tickK, tickK + 1) * 1_000;
             basePrices[i] = Mathf.Clamp(basePrices[i] + delta, minPrice, maxPrice);
 
-            // 2) ราคาโชว์จริง = base * eventMultiplier
-            int finalPrice = Mathf.Clamp(
-                Mathf.RoundToInt(basePrices[i] * eventMul),
-                minPrice,
-                maxPrice
-            );
+            // 2) คำนวณราคาโชว์จริงจาก base * eventMultiplier
+            int rawPrice = Mathf.RoundToInt(basePrices[i] * eventMul);
+
+            // ✅ ถ้า eventMul ต่ำมาก (เช่น ฟองสบู่แตก 0.2, 0.3)
+            // ให้ใช้ eventMinPrice เป็นพื้นแทน minPrice ปกติ
+            int lowerBound = (eventMul < 0.5f) ? eventMinPrice : minPrice;
+
+            int finalPrice = Mathf.Clamp(rawPrice, lowerBound, maxPrice);
             h.price = finalPrice;
 
             // 3) จ่ายค่าเช่า

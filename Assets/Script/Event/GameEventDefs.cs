@@ -18,7 +18,9 @@ public enum GameEventId
     GoldRally,          // ทองคำราคาพุ่ง!
 
     HousingBubbleBurst, // ฟองสบู่แตก!
-    HousingBubbleForm   // (เผื่อใช้ในอนาคต ฟองสบู่อสังหาฯ ราคาพุ่ง)
+    HousingBubbleForm,  // ฟองสบู่อสังหาฯ กำลังก่อตัว (เผื่อใช้อนาคต)
+
+    TaxAudit            // กรมสรรพากรเข้าตรวจสอบ!
 }
 
 
@@ -49,5 +51,9 @@ public class EventConfig
     public string title;
     [TextArea] public string description;
     public Sprite image;               // รูปที่ใช้แสดงข่าว
-    public EventEffectDef[] effects;   // ผลกระทบต่อราคา
+    public EventEffectDef[] effects;   // ผลกระทบต่อราคา (ถ้าไม่มีให้เว้นว่าง)
+
+    [Header("พิเศษ")]
+    [Tooltip("ถ้า true = ข่าวนี้จะถูกพิจารณาเฉพาะรอบสุดท้ายของเกม")]
+    public bool onlyFinalRound = false;
 }

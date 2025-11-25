@@ -263,11 +263,13 @@ public class GameResultManager : NetworkBehaviour
             ? $"P{localId}"
             : myResult.playerName;
 
+        // Unity Leaderboards ใช้ double ได้ แต่เราส่งเป็น float ก็พอ
         float score = (float)myResult.finalNetworth;
 
         await LeaderboardSubmitter.SubmitScoreAsync(score, playerName);
         Debug.Log($"[GRM] Leaderboard submit: {playerName} score={score}");
     }
+
 
     private void LoadGameOverScene()
     {
