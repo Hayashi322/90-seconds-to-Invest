@@ -1,6 +1,9 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
+using static Unity.Burst.Intrinsics.X86;
 
 public class GoldShopUI : MonoBehaviour
 {
@@ -16,6 +19,12 @@ public class GoldShopUI : MonoBehaviour
 
     private GoldShopManager shop;      // มี NetworkVariable ราคาทอง
     private InventoryManager inv;      // มี NetworkVariable goldAmount / cash
+
+    [SerializeField] private TMP_InputField GoldInput;
+    private int value; //จำนวนทองที่ใส่ในช่อง
+    [SerializeField] private TextMeshProUGUI averageTMP;
+    private List<int> goldList = new List<int>();  //ราคาทองทั้งหมดที่ซื้อ
+
 
     private void OnEnable()
     {
@@ -83,7 +92,10 @@ public class GoldShopUI : MonoBehaviour
 
     private void Update()
     {
-        RefreshPrices() ;   
+        RefreshPrices() ;
+
+        if (inv.goldAmount.Value <= 0) { averageTMP.text = "ราคาทองเฉลี่ย:0"; };
+
     }
 
     private void RefreshGold()
@@ -104,12 +116,69 @@ public class GoldShopUI : MonoBehaviour
     public void BuyGold()
     {
         if (inv == null) return;
-        inv.BuyGoldServerRpc(1);   // server จะอ่านราคาจาก GoldShopManager เอง
+        //OnSubmit();
+        if(value<=0) { return; }
+        if (value > 1000) {  return; }
+        inv.BuyGoldServerRpc(value);   // server จะอ่านราคาจาก GoldShopManager เอง
+                           
+        for (int i = 0; i < value; i++) // เพิ่มราคาทองลงใน list ตามจำนวนที่ซื้อ
+        {
+            if (goldList.Count >= inv.goldAmount.Value)
+
+            {
+             
+                return;
+            }
+            goldList.Add(shop.BuyGoldPrice.Value);
+            
+        }
+       UpdateUI();
+
+
     }
 
     public void SellGold()
     {
         if (inv == null) return;
-        inv.SellGoldServerRpc(1);
+        if (value<= 0) { return; }
+        if(value> inv.goldAmount.Value) { value = inv.goldAmount.Value; }
+        inv.SellGoldServerRpc(value);
+        for (int i = 0; i < value; i++) // ลดราคาทองลงใน list ตามจำนวนที่ขายจากอันเก่าสุด
+        {
+            goldList.RemoveAt(0);
+        }
+
+        UpdateUI() ;
+ 
+    }
+    public void OnSubmit()
+    {
+        if (int.TryParse(GoldInput.text, out value))
+        {
+            Debug.Log("ค่าที่กรอกคือ: " + value);
+        }
+        else
+        {
+            Debug.Log("กรุณาใส่เฉพาะตัวเลข");
+        }
+    }
+   public void UpdateUI()
+    {
+       int avg = CalculateAverage();
+        if (inv.goldAmount.Value <= 0) { averageTMP.text = "ราคาทองเฉลี่ย:0"; }; //อัพเดทข้อความค่าเฉลี่ย
+        averageTMP.text = $"ค่าทองเฉลี่ย:{avg}";
+    }
+    private int CalculateAverage() //หาค่าเฉลี่ย
+    {
+        if (goldList.Count == 0)
+            return 0;
+
+        int sum = 0;
+        foreach (int price in goldList)
+        {
+            sum += price;
+        }
+
+        return sum / goldList.Count;
     }
 }

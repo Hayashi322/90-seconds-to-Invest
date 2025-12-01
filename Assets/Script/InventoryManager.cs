@@ -116,6 +116,7 @@ public class InventoryManager : NetworkBehaviour
         if (cash.Value < cost) return;
 
         cash.Value -= cost;
+        if(cash.Value < 0) cash.Value = 0;
         goldAmount.Value += qty;
     }
 
