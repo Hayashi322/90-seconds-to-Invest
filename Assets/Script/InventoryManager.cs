@@ -63,6 +63,8 @@ public class InventoryManager : NetworkBehaviour
     // แจ้ง UI เรื่องเงินเปลี่ยน (previous, current) เฉพาะ local owner
     public event Action<double, double> CashChanged;
 
+    public NetworkVariable<int> bonus = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
 
 
           //========ค่าเฉลี่ยทอง========//
@@ -209,29 +211,35 @@ public class InventoryManager : NetworkBehaviour
         cash.Value -= cost;
 
         // ทอยเต๋า
-        int d1 = UnityEngine.Random.Range(1, 7);
+        int d1 = UnityEngine.Random.Range(1, 101);
         int d2 = UnityEngine.Random.Range(1, 7);
-        int sum = d1 + d2;
+        int sum = d1;
 
         bool isEven = (sum % 2) == 0;
         bool isHigh = sum >= 6;
 
-        bool win = choice switch
+        if (sum <= 5) bonus.Value = 10;  //5%
+        else if (sum <= 15) bonus.Value = 5;  //10%
+        else if (sum <= 30) bonus.Value = 3;  //15%
+        else if (sum <= 60) bonus.Value = 2;  //30%
+        else bonus.Value = 0;  //40%
+
+        bool win = true;
+      /*  bool win = choice switch
         {
             BetChoice.HighEven => isHigh && isEven,
             BetChoice.HighOdd => isHigh && !isEven,
             BetChoice.LowEven => !isHigh && isEven,
             BetChoice.LowOdd => !isHigh && !isEven,
             _ => false
-        };
+        };*/
 
-        if (win)
-        {
-            double reward = cost * 3f;
+            double reward = cost * bonus.Value;
             cash.Value += reward;
-        }
+        
 
         SendCasinoResultClientRpc(win, d1, d2, "", target);
+        Debug.Log("Bonus: "+bonus.Value);
     }
 
     [ClientRpc]
