@@ -23,7 +23,6 @@ public class GoldShopUI : MonoBehaviour
     [SerializeField] private TMP_InputField GoldInput;
     private int value; //จำนวนทองที่ใส่ในช่อง
     [SerializeField] private TextMeshProUGUI averageTMP;
-    private List<int> goldList = new List<int>();  //ราคาทองทั้งหมดที่ซื้อ
 
 
     private void OnEnable()
@@ -93,11 +92,10 @@ public class GoldShopUI : MonoBehaviour
     private void Update()
     {
         RefreshPrices() ;
-
-        if (inv.goldAmount.Value <= 0) { averageTMP.text = "ราคาทองเฉลี่ย:0"; };
+        UpdateUI();
 
     }
-
+ 
     private void RefreshGold()
     {
         if (!inv) return;
@@ -116,25 +114,9 @@ public class GoldShopUI : MonoBehaviour
     public void BuyGold()
     {
         if (inv == null) return;
-        //OnSubmit();
         if(value<=0) { return; }
         if (value > 1000) {  return; }
         inv.BuyGoldServerRpc(value);   // server จะอ่านราคาจาก GoldShopManager เอง
-                           
-        for (int i = 0; i < value; i++) // เพิ่มราคาทองลงใน list ตามจำนวนที่ซื้อ
-        {
-            if (goldList.Count >= inv.goldAmount.Value)
-
-            {
-             
-                return;
-            }
-            goldList.Add(shop.BuyGoldPrice.Value);
-            
-        }
-       UpdateUI();
-
-
     }
 
     public void SellGold()
@@ -143,13 +125,6 @@ public class GoldShopUI : MonoBehaviour
         if (value<= 0) { return; }
         if(value> inv.goldAmount.Value) { value = inv.goldAmount.Value; }
         inv.SellGoldServerRpc(value);
-        for (int i = 0; i < value; i++) // ลดราคาทองลงใน list ตามจำนวนที่ขายจากอันเก่าสุด
-        {
-            goldList.RemoveAt(0);
-        }
-
-        UpdateUI() ;
- 
     }
     public void OnSubmit()
     {
@@ -162,23 +137,10 @@ public class GoldShopUI : MonoBehaviour
             Debug.Log("กรุณาใส่เฉพาะตัวเลข");
         }
     }
-   public void UpdateUI()
+    public void UpdateUI()
     {
-       int avg = CalculateAverage();
         if (inv.goldAmount.Value <= 0) { averageTMP.text = "ราคาทองเฉลี่ย:0"; }; //อัพเดทข้อความค่าเฉลี่ย
-        averageTMP.text = $"ค่าทองเฉลี่ย:{avg}";
-    }
-    private int CalculateAverage() //หาค่าเฉลี่ย
-    {
-        if (goldList.Count == 0)
-            return 0;
-
-        int sum = 0;
-        foreach (int price in goldList)
-        {
-            sum += price;
-        }
-
-        return sum / goldList.Count;
+        averageTMP.text = $"ค่าทองเฉลี่ย:{inv.averageGoldPrice.Value}";
+     
     }
 }

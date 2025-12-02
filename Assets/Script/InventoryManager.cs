@@ -4,6 +4,8 @@ using Unity.Netcode;
 using Unity.Collections;
 using TMPro;
 using UnityEngine.Rendering;
+using NUnit;
+using static UnityEngine.Rendering.DebugUI;
 
 // ===== ชนิดที่ใช้ร่วม =====
 public enum BetChoice
@@ -60,6 +62,18 @@ public class InventoryManager : NetworkBehaviour
 
     // แจ้ง UI เรื่องเงินเปลี่ยน (previous, current) เฉพาะ local owner
     public event Action<double, double> CashChanged;
+
+
+
+          //========ค่าเฉลี่ยทอง========//
+    public NetworkVariable<int> averageGoldPrice =
+    new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    private int totalGoldCost = 0;
+    public NetworkList<int> goldList = new NetworkList<int>();  
+
+
+
 
     private void Awake()
     {
@@ -118,6 +132,19 @@ public class InventoryManager : NetworkBehaviour
         cash.Value -= cost;
         if(cash.Value < 0) cash.Value = 0;
         goldAmount.Value += qty;
+
+        for (int i = 0; i < qty; i++) // เพิ่มราคาทองลงใน list ตามจำนวนที่ซื้อ
+        {
+            if (goldList.Count >= goldAmount.Value)
+
+            {
+
+                return;
+            }
+            goldList.Add(shop.BuyGoldPrice.Value);
+
+        }
+        averageGoldPrice.Value = CalculateAverage();
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -131,6 +158,26 @@ public class InventoryManager : NetworkBehaviour
 
         goldAmount.Value -= qty;
         cash.Value += qty * unitPrice;
+
+        for (int i = 0; i < qty; i++) // ลดราคาทองลงใน list ตามจำนวนที่ขายจากอันใหม่สุด
+        {
+            goldList.RemoveAt(goldList.Count-1);
+        }
+        averageGoldPrice.Value = CalculateAverage();
+    }
+
+    private int CalculateAverage() //หาค่าเฉลี่ย
+    {
+        if (goldList.Count == 0)
+            return 0;
+
+        int sum = 0;
+        foreach (int price in goldList)
+        {
+            sum += price;
+        }
+
+        return sum / goldList.Count;
     }
 
 
