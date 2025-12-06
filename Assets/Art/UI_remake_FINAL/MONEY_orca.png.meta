@@ -1,10 +1,16 @@
 fileFormatVersion: 2
-guid: 93ddca4f3b95ffc48a933c432c60ac94
+guid: 72204cd97ec9b074fb5a32d6a1aa2768
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3077030161304794006
-    second: Orca_Tank_Tower._0
+      213: 5193033035752532114
+    second: MONEY_orca_0
+  - first:
+      213: 8273210791468739914
+    second: MONEY_orca_1
+  - first:
+      213: 1263678865218754192
+    second: MONEY_orca_2
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -96,30 +102,17 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: Android
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Orca_Tank_Tower._0
+      name: MONEY_orca_0
       rect:
         serializedVersion: 2
-        x: 138
-        y: 69
-        width: 727
-        height: 826
+        x: 151
+        y: 78
+        width: 317
+        height: 122
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +121,52 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a6cc3400f513c45d0800000000000000
-      internalID: -3077030161304794006
+      spriteID: 298e5ea380c511840800000000000000
+      internalID: 5193033035752532114
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MONEY_orca_1
+      rect:
+        serializedVersion: 2
+        x: 503
+        y: 80
+        width: 314
+        height: 116
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a4d2c69a16950d270800000000000000
+      internalID: 8273210791468739914
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MONEY_orca_2
+      rect:
+        serializedVersion: 2
+        x: 853
+        y: 83
+        width: 315
+        height: 116
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 096588f8b3d798110800000000000000
+      internalID: 1263678865218754192
       vertices: []
       indices: 
       edges: []
@@ -147,8 +184,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      Orca_Tank_Tower._0: -3077030161304794006
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

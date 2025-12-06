@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 93ddca4f3b95ffc48a933c432c60ac94
+guid: 633d1b4203dbdf349b6cf6114abf0847
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3077030161304794006
-    second: Orca_Tank_Tower._0
+      213: -7122522013370149715
+    second: X_orca_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -96,30 +96,17 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: Android
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Orca_Tank_Tower._0
+      name: X_orca_0
       rect:
         serializedVersion: 2
-        x: 138
-        y: 69
-        width: 727
-        height: 826
+        x: 1558
+        y: 887
+        width: 206
+        height: 106
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a6cc3400f513c45d0800000000000000
-      internalID: -3077030161304794006
+      spriteID: da41c2037f7b72d90800000000000000
+      internalID: -7122522013370149715
       vertices: []
       indices: 
       edges: []
@@ -147,8 +134,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      Orca_Tank_Tower._0: -3077030161304794006
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
