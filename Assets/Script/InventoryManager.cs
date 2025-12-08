@@ -4,8 +4,6 @@ using Unity.Netcode;
 using Unity.Collections;
 using TMPro;
 using UnityEngine.Rendering;
-using NUnit;
-using static UnityEngine.Rendering.DebugUI;
 
 // ===== ชนิดที่ใช้ร่วม =====
 public enum BetChoice
@@ -30,10 +28,14 @@ public struct HoldingNet : INetworkSerializable, IEquatable<HoldingNet>
     public FixedString64Bytes stockName;
     public int quantity;
 
+    // ⭐ ต้นทุนเฉลี่ยต่อหุ้นของตัวนี้
+    public double averageCost;
+
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
     {
         serializer.SerializeValue(ref stockName);
         serializer.SerializeValue(ref quantity);
+        serializer.SerializeValue(ref averageCost);   // ⭐ sync ไปให้ client ด้วย
     }
 
     public bool Equals(HoldingNet other)
@@ -67,13 +69,12 @@ public class InventoryManager : NetworkBehaviour
 
 
 
-          //========ค่าเฉลี่ยทอง========//
+    //========ค่าเฉลี่ยทอง========//
     public NetworkVariable<int> averageGoldPrice =
-    new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     private int totalGoldCost = 0;
-    public NetworkList<int> goldList = new NetworkList<int>();  
-
+    public NetworkList<int> goldList = new NetworkList<int>();
 
 
 
@@ -85,9 +86,6 @@ public class InventoryManager : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-
-        // ❌ ไม่ต้อง new ซ้ำแล้ว (เราสร้างไว้ตั้งแต่ประกาศ)
-        // if (stockHoldings == null) stockHoldings = new NetworkList<HoldingNet>();
 
         if (IsServer && cash.Value <= 0)
             cash.Value = 10_000_000f;
@@ -119,7 +117,38 @@ public class InventoryManager : NetworkBehaviour
         }
     }
 
-    // ===== GOLD (Server authoritative) =====
+    // ============================
+    //   Common Cash Helper (Server)
+    // ============================
+    /// <summary>
+    /// หักเงินจาก player คนนี้บนฝั่ง Server
+    /// คืนค่า true ถ้าหักสำเร็จ, false ถ้าเงินไม่พอหรือเรียกผิดที่
+    /// </summary>
+    public bool TrySpendCash(double amount)
+    {
+        if (!IsServer)
+        {
+            Debug.LogWarning("[Inventory][Server] TrySpendCash should be called on Server only.");
+            return false;
+        }
+
+        if (amount <= 0) return true;
+
+        if (cash.Value < amount)
+        {
+            Debug.Log($"[Inventory][Server] Spend failed (need {amount:N2}, has {cash.Value:N2})");
+            return false;
+        }
+
+        double before = cash.Value;
+        cash.Value -= amount;
+        Debug.Log($"[Inventory][Server] Spend {amount:N2} | {before:N2} -> {cash.Value:N2}");
+        return true;
+    }
+
+    // ============================
+    //       GOLD (Server)
+    // ============================
     [ServerRpc(RequireOwnership = false)]
     public void BuyGoldServerRpc(int qty)
     {
@@ -132,21 +161,19 @@ public class InventoryManager : NetworkBehaviour
         if (cash.Value < cost) return;
 
         cash.Value -= cost;
-        if(cash.Value < 0) cash.Value = 0;
+        if (cash.Value < 0) cash.Value = 0;
         goldAmount.Value += qty;
 
         for (int i = 0; i < qty; i++) // เพิ่มราคาทองลงใน list ตามจำนวนที่ซื้อ
         {
             if (goldList.Count >= goldAmount.Value)
-
             {
-
                 return;
             }
             goldList.Add(shop.BuyGoldPrice.Value);
-
         }
-        averageGoldPrice.Value = CalculateAverage();
+
+        averageGoldPrice.Value = CalculateAverageGold();
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -161,14 +188,18 @@ public class InventoryManager : NetworkBehaviour
         goldAmount.Value -= qty;
         cash.Value += qty * unitPrice;
 
-        for (int i = 0; i < qty; i++) // ลดราคาทองลงใน list ตามจำนวนที่ขายจากอันใหม่สุด
+        for (int i = 0; i < qty; i++) // ลดราคาทองลงใน list จากอันใหม่สุด
         {
-            goldList.RemoveAt(goldList.Count-1);
+            if (goldList.Count > 0)
+            {
+                goldList.RemoveAt(goldList.Count - 1);
+            }
         }
-        averageGoldPrice.Value = CalculateAverage();
+
+        averageGoldPrice.Value = CalculateAverageGold();
     }
 
-    private int CalculateAverage() //หาค่าเฉลี่ย
+    private int CalculateAverageGold() //หาค่าเฉลี่ยทอง
     {
         if (goldList.Count == 0)
             return 0;
@@ -218,28 +249,19 @@ public class InventoryManager : NetworkBehaviour
         bool isEven = (sum % 2) == 0;
         bool isHigh = sum >= 6;
 
-        if (sum <= 5) bonus.Value = 10;  //5%
-        else if (sum <= 15) bonus.Value = 5;  //10%
-        else if (sum <= 30) bonus.Value = 3;  //15%
-        else if (sum <= 60) bonus.Value = 2;  //30%
-        else bonus.Value = 0;  //40%
+        if (sum <= 5) bonus.Value = 10;      //5%
+        else if (sum <= 15) bonus.Value = 5; //10%
+        else if (sum <= 30) bonus.Value = 3; //15%
+        else if (sum <= 60) bonus.Value = 2; //30%
+        else bonus.Value = 0;                //40%
 
         bool win = true;
-      /*  bool win = choice switch
-        {
-            BetChoice.HighEven => isHigh && isEven,
-            BetChoice.HighOdd => isHigh && !isEven,
-            BetChoice.LowEven => !isHigh && isEven,
-            BetChoice.LowOdd => !isHigh && !isEven,
-            _ => false
-        };*/
 
-            double reward = cost * bonus.Value;
-            cash.Value += reward;
-        
+        double reward = cost * bonus.Value;
+        cash.Value += reward;
 
         SendCasinoResultClientRpc(win, d1, d2, "", target);
-        Debug.Log("Bonus: "+bonus.Value);
+        Debug.Log("Bonus: " + bonus.Value);
     }
 
     [ClientRpc]
@@ -254,6 +276,8 @@ public class InventoryManager : NetworkBehaviour
         });
     }
 
+
+
     // ============================
     //   Public Read Helpers (UI)
     // ============================
@@ -266,8 +290,22 @@ public class InventoryManager : NetworkBehaviour
         return 0;
     }
 
+    // ⭐ helper ดูต้นทุนเฉลี่ยของหุ้นแต่ละตัว
+    public double GetStockAverageCost(string stockName)
+    {
+        var key = (FixedString64Bytes)stockName;
+        for (int i = 0; i < stockHoldings.Count; i++)
+        {
+            if (stockHoldings[i].stockName.Equals(key))
+                return stockHoldings[i].averageCost;
+        }
+        return 0;
+    }
+
+
+
     // ============================
-    //       Server-side Ops
+    //       Server-side Ops (เดิม)
     // ============================
     [ServerRpc(RequireOwnership = false)]
     public void BuyGoldServerRpc(int qty, double price, ServerRpcParams rpcParams = default)
@@ -300,7 +338,7 @@ public class InventoryManager : NetworkBehaviour
         }
 
         cash.Value -= cost;
-        AddOrIncreaseStock(stockName, qty);
+        AddOrIncreaseStock(stockName, qty, price);   // ⭐ ส่งราคาเข้าไปคำนวณต้นทุนเฉลี่ย
         Debug.Log($"[Inventory][Server] Buy {stockName} x{qty} @ {price:N2} | cash={cash.Value:N2}");
     }
 
@@ -325,20 +363,45 @@ public class InventoryManager : NetworkBehaviour
     // ============================
     //   Internal (Server only)
     // ============================
-    private void AddOrIncreaseStock(string stockName, int qty)
+    private void AddOrIncreaseStock(string stockName, int qty, double buyPricePerShare)
     {
         var key = (FixedString64Bytes)stockName;
+
         for (int i = 0; i < stockHoldings.Count; i++)
         {
             if (stockHoldings[i].stockName.Equals(key))
             {
+                // ถ้ามีหุ้นตัวนี้อยู่แล้ว → อัปเดตต้นทุนเฉลี่ย
                 var h = stockHoldings[i];
-                h.quantity += qty;
-                stockHoldings[i] = h; // trigger sync
+
+                int oldQty = h.quantity;
+                double oldAvg = h.averageCost;
+
+                int newQty = oldQty + qty;
+                if (newQty <= 0)
+                {
+                    return;
+                }
+
+                double totalCostBefore = oldAvg * oldQty;
+                double totalCostAdded = buyPricePerShare * qty;
+                double newAvg = (totalCostBefore + totalCostAdded) / newQty;
+
+                h.quantity = newQty;
+                h.averageCost = newAvg;
+
+                stockHoldings[i] = h;   // trigger sync
                 return;
             }
         }
-        stockHoldings.Add(new HoldingNet { stockName = key, quantity = qty });
+
+        // ซื้อครั้งแรกของหุ้นตัวนี้
+        stockHoldings.Add(new HoldingNet
+        {
+            stockName = key,
+            quantity = qty,
+            averageCost = buyPricePerShare
+        });
     }
 
     private void RemoveOrDecreaseStock(string stockName, int qty)
@@ -356,6 +419,7 @@ public class InventoryManager : NetworkBehaviour
                 }
                 else
                 {
+                    // ขายออกบางส่วน → ต้นทุนเฉลี่ยของ "ก้อนที่เหลือ" ยังคงเดิม
                     stockHoldings[i] = h;
                 }
                 return;

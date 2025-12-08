@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class PoliceStationUI : MonoBehaviour
 {
-    [Header("Root Panel (ตัว Panel หลักของสถานีตำรวจ)")]
+    [Header("Root Panel (ตัว Panel หลักของตึกสื่อ/คอสสอนการลงทุน)")]
     [SerializeField] private GameObject root;
 
     [Header("Suspect List (Right Side)")]
@@ -20,18 +20,16 @@ public class PoliceStationUI : MonoBehaviour
 
     private void OnEnable()
     {
-        // root ไม่ต้องไปปิด/เปิดเองมากนัก ให้ OpenCanvas จัดการเป็นหลัก
         if (root == null) root = gameObject;
 
         if (titleText)
-            titleText.text = "สถานีตำรวจ";
+            titleText.text = "Education Media Tower";
 
         StartCoroutine(BindLocalLawAndRefresh());
     }
 
     private IEnumerator BindLocalLawAndRefresh()
     {
-        // รอ Netcode พร้อม
         while (NetworkManager.Singleton == null ||
                NetworkManager.Singleton.SpawnManager == null)
             yield return null;
@@ -46,33 +44,21 @@ public class PoliceStationUI : MonoBehaviour
         localLaw = localObj.GetComponent<PlayerLawState>();
         if (localLaw == null)
         {
-            Debug.LogError("[PoliceUI] Local player has no PlayerLawState.");
+            Debug.LogError("[MediaUI] Local player has no PlayerLawState.");
             yield break;
         }
 
         RefreshSuspectList();
     }
 
-    /// <summary>
-    /// ปิดหน้าต่างสถานีตำรวจ:
-    /// - ไม่ปิด root แล้ว (ไม่ SetActive(false) ลูก)
-    /// - ให้ OpenCanvas.closeCanvas() เป็นคนจัดการปิด CanvasGroup + blockRaycast
-    /// - สั่ง hero.SetUIOpen(false) กันเหนียว
-    /// </summary>
     public void Close()
     {
-        // ❌ อย่าปิด root ตรง ๆ เดี๋ยวมันไม่ตื่นอีก
-        // if (root != null)
-        //     root.SetActive(false);
-
-        // 1) ให้ OpenCanvas ปิดแคนวาส/บล็อกต่าง ๆ
         var oc = FindObjectOfType<OpenCanvas>(true);
         if (oc != null)
         {
             oc.closeCanvas();
         }
 
-        // 2) กันเหนียว: สั่งปลด PauseByUI ผ่าน HeroControllerNet
         var localObj = NetworkManager.Singleton?.SpawnManager?.GetLocalPlayerObject();
         if (localObj != null)
         {
@@ -88,7 +74,7 @@ public class PoliceStationUI : MonoBehaviour
     {
         if (suspectListRoot == null || suspectButtonPrefab == null)
         {
-            Debug.LogError("[PoliceUI] suspectListRoot or suspectButtonPrefab not assigned!");
+            Debug.LogError("[MediaUI] suspectListRoot or suspectButtonPrefab not assigned!");
             return;
         }
 
@@ -97,7 +83,7 @@ public class PoliceStationUI : MonoBehaviour
 
         if (NetworkManager.Singleton == null)
         {
-            Debug.LogError("[PoliceUI] No NetworkManager.");
+            Debug.LogError("[MediaUI] No NetworkManager.");
             return;
         }
 
@@ -125,12 +111,12 @@ public class PoliceStationUI : MonoBehaviour
         {
             if (created == 0)
             {
-                infoText.text = "ไม่สามารถใช้สถานที่นี่ได้ (ไม่มีผู้เล่นคนอื่นในเมือง)";
+                infoText.text = "ไม่สามารถใช้ตึกนี้ได้ (ไม่มีผู้เล่นคนอื่นในเมือง)";
                 StartCoroutine(AutoCloseShortly());
             }
             else
             {
-                infoText.text = "เลือกไอคอนผู้เล่นที่ต้องการเชิญไปออกรายการ";
+                infoText.text = "เลือกผู้เล่นที่ต้องการเชิญไปออกรายการให้ความรู้การลงทุน";
             }
         }
     }
@@ -145,6 +131,7 @@ public class PoliceStationUI : MonoBehaviour
     {
         if (localLaw != null)
         {
+            // เรียกไปสุ่ม 40/60 ที่ LawManager
             localLaw.RequestReportPlayerServerRpc(suspect.OwnerClientId);
         }
         Close();

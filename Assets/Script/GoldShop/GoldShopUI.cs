@@ -139,8 +139,8 @@ public class GoldShopUI : MonoBehaviour
     }
     public void UpdateUI()
     {
-        if (inv.goldAmount.Value <= 0) { averageTMP.text = "ราคาทองเฉลี่ย:0"; }; //อัพเดทข้อความค่าเฉลี่ย
-        averageTMP.text = $"ค่าทองเฉลี่ย:{inv.averageGoldPrice.Value}";
+        if (inv.goldAmount.Value <= 0) { averageTMP.text = "ต้นทุนทองเฉลี่ย:0"; }; //อัพเดทข้อความค่าเฉลี่ย
+        averageTMP.text = $"ต้นทุนทองเฉลี่ย:{inv.averageGoldPrice.Value}";
      
     }
 }
