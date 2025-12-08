@@ -117,7 +117,7 @@ public class LotteryPopupUI : MonoBehaviour
         if (!hasTicket)
         {
             if (resultText)
-                resultText.text = "คุณไม่ได้ซื้อหวยในรอบนี้";
+                resultText.text = "คุณไม่ได้ซื้อลอตเตอรี่ในรอบนี้";
         }
         else if (win)
         {
@@ -127,7 +127,7 @@ public class LotteryPopupUI : MonoBehaviour
         else
         {
             if (resultText)
-                resultText.text = "เสียใจด้วย คุณถูกหวยกิน...";
+                resultText.text = "เสียใจด้วย คุณไม่ถูกลอตเตอรี่...";
         }
 
         // ค้างให้ดูผล
