@@ -28,7 +28,7 @@ public class JialCanvas : MonoBehaviour
     {
         remainingTime = duration;
         reasonText.text = $"สาเหตุ: {reason}";
-        titleText.text = "คุณถูกจับแล้ว!";
+        titleText.text = "คุณถูกเชิญมาออกรายการ";
         panelGroup.gameObject.SetActive(true);
 
         // ★ บล็อคการคลิก UI อื่น
@@ -58,7 +58,7 @@ public class JialCanvas : MonoBehaviour
         }
         else
         {
-            timerText.text = $"จะถูกปล่อยใน {remainingTime:F0} วินาที";
+            timerText.text = $"จะถ่ายเสร็จใน {remainingTime:F0} วินาที";
         }
     }
 

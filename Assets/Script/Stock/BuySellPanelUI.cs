@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using TMPro;
-using Unity.Multiplayer.Center.NetcodeForGameObjectsExample.DistributedAuthority;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,7 +14,9 @@ public class BuySellPanelUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI[] Stock_text;
     [SerializeField] private int[] Stock_Amount;
 
-    //private StockUIManager uiManager;
+    // เก็บชื่อหุ้นตัวล่าสุดที่เราอัปเดตไว้ เพื่อเช็คว่าเปลี่ยนตัวหรือยัง
+    private string _lastSelectedStock = "";
+
     private void Start()
     {
         buyButton.onClick.AddListener(OnBuy);
@@ -26,12 +27,54 @@ public class BuySellPanelUI : MonoBehaviour
     private void Update()
     {
         var mkt = StockMarketManager.Instance;
-      // var uiManager = StockUIManager.Instance;
         if (mkt != null && !string.IsNullOrEmpty(mkt.selectedStock))
         {
-            selectedStockText.text = mkt.selectedStock;
-            UpdateTotal();
+            // ถ้าผู้เล่นเพิ่งเปลี่ยนไปเลือกหุ้นตัวใหม่
+            if (_lastSelectedStock != mkt.selectedStock)
+            {
+                _lastSelectedStock = mkt.selectedStock;
+
+                // อัปเดตชื่อหุ้น
+                selectedStockText.text = _lastSelectedStock;
+
+                // ⭐ auto-fill จำนวนหุ้นที่ผู้เล่นถืออยู่ตอนนี้
+                AutoFillHoldingQuantity(_lastSelectedStock);
+
+                // คำนวณราคารวมใหม่
+                UpdateTotal();
+            }
+            else
+            {
+                // ถ้าไม่ได้เปลี่ยนหุ้น แต่ผู้เล่นแก้จำนวนเอง ก็แค่อัปเดตราคา
+                UpdateTotal();
+            }
         }
+    }
+
+    /// <summary>
+    /// ดึงจำนวนหุ้นที่เราถือจาก InventoryManager แล้วใส่ในช่อง volumeInput
+    /// </summary>
+    private void AutoFillHoldingQuantity(string stockSymbol)
+    {
+        int holdingQty = 0;
+
+        var inv = InventoryManager.Instance;
+        if (inv != null && inv.stockHoldings != null)
+        {
+            var list = inv.stockHoldings;
+            for (int i = 0; i < list.Count; i++)
+            {
+                // HoldingNet.stockName เป็น FixedString64Bytes → แปลงเป็น string
+                if (list[i].stockName.ToString() == stockSymbol)
+                {
+                    holdingQty = list[i].quantity;
+                    break;
+                }
+            }
+        }
+
+        // ถ้ามีหุ้น → ใส่เลขให้, ถ้าไม่มี → ปล่อยว่างให้ผู้เล่นพิมพ์เอง
+        volumeInput.text = holdingQty > 0 ? holdingQty.ToString() : "";
     }
 
     private void UpdateTotal()
@@ -57,43 +100,29 @@ public class BuySellPanelUI : MonoBehaviour
         float price = mkt.GetCurrentPrice(stock);
 
         inv.BuyStockServerRpc(stock, qty, price); // เรียกที่ Server
+
         int AA = 999;
-        switch(stock)
+        switch (stock)
         {
-            case "PTT":
-                AA = 0;
-                break;
-            case "KBANK":
-                AA = 1;
-                break;
-            case "AOT":
-                AA = 2;
-                break;
-            case "BDMS":
-                AA = 3;
-                break;
-            case "DELTA":
-                AA = 4;
-                break;
-            case "CPNREIT":
-                AA = 5;
-                break;
-            default 
-            :AA = 0;
-                break;
+            case "PTT": AA = 0; break;
+            case "KBANK": AA = 1; break;
+            case "AOT": AA = 2; break;
+            case "BDMS": AA = 3; break;
+            case "DELTA": AA = 4; break;
+            case "CPNREIT": AA = 5; break;
+            default: AA = 0; break;
         }
-        if (inv.cash.Value < mkt.GetCurrentPrice(stock)*qty)
+
+        if (inv.cash.Value < mkt.GetCurrentPrice(stock) * qty)
             return;
         else
-        { Stock_Amount[AA] +=qty;
-        if (Stock_Amount[AA] <= 0)
-            Stock_Amount[AA] = 0;
-        Stock_text[AA].text = $"{Stock_Amount[AA]}";
-            Debug.Log("price:"+ mkt.GetCurrentPrice(stock)*qty);
+        {
+            Stock_Amount[AA] += qty;
+            if (Stock_Amount[AA] <= 0)
+                Stock_Amount[AA] = 0;
+            Stock_text[AA].text = $"{Stock_Amount[AA]}";
+            Debug.Log("price:" + mkt.GetCurrentPrice(stock) * qty);
         }
-       
-        
-       
     }
 
     private void OnSell()
@@ -113,39 +142,24 @@ public class BuySellPanelUI : MonoBehaviour
         int AA = 999;
         switch (stock)
         {
-            case "PTT":
-                AA = 0;
-                break;
-            case "KBANK":
-                AA = 1;
-                break;
-            case "AOT":
-                AA = 2;
-                break;
-            case "BDMS":
-                AA = 3;
-                break;
-            case "DELTA":
-                AA = 4;
-                break;
-            case "CPNREIT":
-                AA = 5;
-                break;
-            default
-            :
-                AA = 0;
-                break;
+            case "PTT": AA = 0; break;
+            case "KBANK": AA = 1; break;
+            case "AOT": AA = 2; break;
+            case "BDMS": AA = 3; break;
+            case "DELTA": AA = 4; break;
+            case "CPNREIT": AA = 5; break;
+            default: AA = 0; break;
         }
+
         if (qty > Stock_Amount[AA])
             return;
-        else 
+        else
         {
-            Stock_Amount[AA] -=qty;
-        
-        if (Stock_Amount[AA] <= 0)
-            Stock_Amount[AA] = 0;
-        Stock_text[AA].text = $"{Stock_Amount[AA]}";
+            Stock_Amount[AA] -= qty;
+
+            if (Stock_Amount[AA] <= 0)
+                Stock_Amount[AA] = 0;
+            Stock_text[AA].text = $"{Stock_Amount[AA]}";
         }
-        
     }
 }

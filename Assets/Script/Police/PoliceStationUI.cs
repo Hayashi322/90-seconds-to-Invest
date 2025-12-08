@@ -125,12 +125,12 @@ public class PoliceStationUI : MonoBehaviour
         {
             if (created == 0)
             {
-                infoText.text = "ไม่สามารถใช้สถานีตำรวจได้ (ไม่มีผู้เล่นคนอื่นในเมือง)";
+                infoText.text = "ไม่สามารถใช้สถานที่นี่ได้ (ไม่มีผู้เล่นคนอื่นในเมือง)";
                 StartCoroutine(AutoCloseShortly());
             }
             else
             {
-                infoText.text = "เลือกไอคอนผู้เล่นที่ต้องการแจ้งจับ";
+                infoText.text = "เลือกไอคอนผู้เล่นที่ต้องการเชิญไปออกรายการ";
             }
         }
     }

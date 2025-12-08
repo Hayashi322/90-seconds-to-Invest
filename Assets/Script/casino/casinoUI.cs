@@ -54,7 +54,7 @@ public class casinoUI : MonoBehaviour
 
     private IEnumerator ShowEnterMessage()
     {
-        enterMessageText.text = "ตำรวจมาตัวใครตัวมันเด้อ";
+        enterMessageText.text = "เลือกลงทุกกับบริษัท Start Up";
         enterMessageText.gameObject.SetActive(true);
 
         yield return new WaitForSeconds(enterMessageDuration);
@@ -66,7 +66,7 @@ public class casinoUI : MonoBehaviour
     private IEnumerator ShowTempOn(TextMeshProUGUI target)
     {
         string backup = target.text;
-        target.text = "ตำรวจมาตัวใครตัวมันเด้อ";
+        target.text = "เลือกลงทุกกับบริษัท Start Up";
         yield return new WaitForSeconds(enterMessageDuration);
         target.text = backup;
     }
