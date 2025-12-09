@@ -131,6 +131,7 @@ GameObject:
   - component: {fileID: 144485331}
   - component: {fileID: 144485330}
   - component: {fileID: 144485329}
+  - component: {fileID: 144485332}
   m_Layer: 5
   m_Name: prevButton
   m_TagString: Untagged
@@ -239,6 +240,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 144485327}
   m_CullTransparentMesh: 1
+--- !u!114 &144485332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 144485327}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a827b0ba9f0a3b488ccab691d43060a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetScale: {x: 1.1, y: 1.1, z: 1}
+  scaleSpeed: 10
 --- !u!1 &220445485
 GameObject:
   m_ObjectHideFlags: 0
@@ -387,6 +402,7 @@ GameObject:
   - component: {fileID: 243166914}
   - component: {fileID: 243166913}
   - component: {fileID: 243166912}
+  - component: {fileID: 243166915}
   m_Layer: 5
   m_Name: BacktoMenu
   m_TagString: Untagged
@@ -496,6 +512,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 243166910}
   m_CullTransparentMesh: 1
+--- !u!114 &243166915
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 243166910}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a827b0ba9f0a3b488ccab691d43060a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetScale: {x: 1.1, y: 1.1, z: 1}
+  scaleSpeed: 10
 --- !u!1 &316317753
 GameObject:
   m_ObjectHideFlags: 0
@@ -1259,6 +1289,7 @@ GameObject:
   - component: {fileID: 1240511152}
   - component: {fileID: 1240511151}
   - component: {fileID: 1240511153}
+  - component: {fileID: 1240511154}
   m_Layer: 5
   m_Name: nextButton
   m_TagString: Untagged
@@ -1367,6 +1398,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1240511154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1240511149}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a827b0ba9f0a3b488ccab691d43060a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetScale: {x: 1.1, y: 1.1, z: 1}
+  scaleSpeed: 10
 --- !u!1 &1375185462
 GameObject:
   m_ObjectHideFlags: 0
