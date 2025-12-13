@@ -23,6 +23,7 @@ public class GoldShopUI : MonoBehaviour
     [SerializeField] private TMP_InputField GoldInput;
     private int value; //จำนวนทองที่ใส่ในช่อง
     [SerializeField] private TextMeshProUGUI averageTMP;
+    [SerializeField] private TextMeshProUGUI averageInventory_TMP;
 
 
     private void OnEnable()
@@ -139,8 +140,10 @@ public class GoldShopUI : MonoBehaviour
     }
     public void UpdateUI()
     {
-        if (inv.goldAmount.Value <= 0) { averageTMP.text = "ต้นทุนทองเฉลี่ย:0"; }; //อัพเดทข้อความค่าเฉลี่ย
+        if (inv.goldAmount.Value <= 0) { averageTMP.text = "ต้นทุนทองเฉลี่ย:0"; averageInventory_TMP.text = "ต้นทุนทองเฉลี่ย:0"; }; //อัพเดทข้อความค่าเฉลี่ย
         averageTMP.text = $"ต้นทุนทองเฉลี่ย:{inv.averageGoldPrice.Value}";
-     
+        averageInventory_TMP.text = $"ต้นทุนทองเฉลี่ย:{inv.averageGoldPrice.Value}";
+
+
     }
 }
