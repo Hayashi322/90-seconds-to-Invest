@@ -121,7 +121,7 @@ public class LotteryShopUI : MonoBehaviour
 
         // ---------- ตั้งข้อความราคา ----------
         if (priceText)
-            priceText.text = $"หวย รวย\nใบละ {shop.TicketPrice:N0}";
+            priceText.text = $"ลอตเตอรี่\nใบละ {shop.TicketPrice:N0}";
 
         // ---------- bind event ----------
         shop.Slots.OnListChanged += OnSlotsChanged;

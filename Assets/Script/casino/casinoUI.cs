@@ -23,17 +23,19 @@ public class casinoUI : MonoBehaviour
 
     [Header("Bet")]
     [SerializeField] private int cost = 10000;
-    [SerializeField] private bool hightEven = true;
-    [SerializeField] private bool hightOdd = false;
-    [SerializeField] private bool lowEven = false;
-    [SerializeField] private bool lowOdd = false;
+    private bool hightEven = true;
+    private bool hightOdd = false;
+    private bool lowEven = false;
+    private bool lowOdd = false;
 
     private InventoryManager inv;
     private PlayerLawState lawState;
 
+    // ===== Cooldown System (แก้ใหม่ให้ไม่หยุดเมื่อ UI ปิด) =====
     private bool isCooldown = false;
-    private float cooldownTime = 30f;
+    [SerializeField] private float cooldownTime = 30f;
     [SerializeField] private TextMeshProUGUI cooldownText;
+    private float cooldownEndTime = -1f;   // เวลา Time.time ที่คูลดาวน์จะจบ
 
     private void OnEnable()
     {
@@ -54,7 +56,7 @@ public class casinoUI : MonoBehaviour
 
     private IEnumerator ShowEnterMessage()
     {
-        enterMessageText.text = "เลือกลงทุกกับบริษัท Start Up";
+        enterMessageText.text = "เลือกลงทุนกับบริษัท Start Up";
         enterMessageText.gameObject.SetActive(true);
 
         yield return new WaitForSeconds(enterMessageDuration);
@@ -66,7 +68,7 @@ public class casinoUI : MonoBehaviour
     private IEnumerator ShowTempOn(TextMeshProUGUI target)
     {
         string backup = target.text;
-        target.text = "เลือกลงทุกกับบริษัท Start Up";
+        target.text = "เลือกลงทุนกับบริษัท Start Up";
         yield return new WaitForSeconds(enterMessageDuration);
         target.text = backup;
     }
@@ -104,7 +106,7 @@ public class casinoUI : MonoBehaviour
         OnCashChanged(inv.cash.Value, inv.cash.Value);
         SetInteractable(true);
 
-        // แจ้งว่า "เข้า" คาสิโน แล้ว
+        // แจ้งว่าผู้เล่นเข้าคาสิโน
         if (lawState != null && lawState.IsOwner)
         {
             lawState.EnterCasinoServerRpc();
@@ -122,24 +124,48 @@ public class casinoUI : MonoBehaviour
         if (money) money.text = $"{newVal:N0}";
     }
 
+    // =====================================
+    //           กดปุ่ม Roll
+    // =====================================
     public void RollDice()
     {
-        if (!isCooldown)
+        if (isCooldown) return;
+        if (inv == null) return;
+
+        int bet = cost;
+        if (amountInput && int.TryParse(amountInput.text, out var custom) && custom > 0)
+            bet = custom;
+
+        inv.PlaceBetServerRpc(bet, ResolveChoice());
+
+        if (lawState != null && lawState.IsOwner)
         {
-            if (inv == null) return;
+            lawState.NotifyCasinoRollServerRpc();
+        }
 
-            int bet = cost;
-            if (amountInput && int.TryParse(amountInput.text, out var custom) && custom > 0)
-                bet = custom;
+        // เริ่มคูลดาวน์ด้วยเวลาแน่นอน
+        isCooldown = true;
+        cooldownEndTime = Time.time + cooldownTime;
+    }
 
-            inv.PlaceBetServerRpc(bet, ResolveChoice());
+    // =====================================
+    //     Update → นับถอยหลังคูลดาวน์
+    // =====================================
+    private void Update()
+    {
+        if (!isCooldown) return;
 
-            // แจ้งว่ามีการ Roll → นับว่าเริ่มทำผิด
-            if (lawState != null && lawState.IsOwner)
-            {
-                lawState.NotifyCasinoRollServerRpc();
-            }
-            StartCoroutine(CooldownRoutine());
+        float remaining = cooldownEndTime - Time.time;
+
+        if (remaining <= 0)
+        {
+            isCooldown = false;
+            if (cooldownText) cooldownText.text = "";
+        }
+        else
+        {
+            if (cooldownText)
+                cooldownText.text = "ต้องรอ " + Mathf.CeilToInt(remaining) + " วินาที";
         }
     }
 
@@ -161,13 +187,11 @@ public class casinoUI : MonoBehaviour
 
         if (dice1) dice1.text = r.dice1.ToString("F0");
         if (dice2) dice2.text = r.dice2.ToString("F0");
-       // if (result) result.text = r.win ? "คุณชนะ" : "คุณแพ้";
-        if(inv.bonus.Value>0) 
-        {
-            result.text = "คุณได้เงินตอบแทนx"+inv.bonus.Value;
-        }
-        else { result.text = "คุณไม่ได้เงินตอบแทน"; }
-       
+
+        if (inv.bonus.Value > 0)
+            result.text = "คุณได้เงินตอบแทน x" + inv.bonus.Value;
+        else
+            result.text = "คุณไม่ได้เงินตอบแทน";
     }
 
     // Quick-select bet amount
@@ -201,13 +225,13 @@ public class casinoUI : MonoBehaviour
         for (int i = 0; i < BetButton.Length; i++)
             BetButton[i].image.color = (i == clickedIndex) ? Color.gray : Color.white;
     }
+
     private void OnButtonClicked01(int clickedIndex)
     {
         for (int j = 0; j < PriceButton.Length; j++)
             PriceButton[j].image.color = (j == clickedIndex) ? Color.gray : Color.white;
     }
 
-    // ปุ่มปิดคาสิโน → ให้ผูกจาก Button OnClick
     public void OnClickCloseCasino()
     {
         if (lawState != null && lawState.IsOwner)
@@ -216,22 +240,5 @@ public class casinoUI : MonoBehaviour
         }
 
         gameObject.SetActive(false);
-    }
-
-    IEnumerator CooldownRoutine()
-    {
-        isCooldown = true;
-       
-
-        float timer = cooldownTime;
-
-        while (timer > 0)
-        {
-            cooldownText.text = "ต้องรอ " + timer.ToString("F0") + " วินาที";
-            yield return new WaitForSeconds(1f);
-            timer--;
-        }
-        cooldownText.text = "";
-        isCooldown = false;
     }
 }
