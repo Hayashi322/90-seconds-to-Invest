@@ -46,7 +46,6 @@ public class EventManagerNet : NetworkBehaviour
         if (Instance == this) Instance = null;
     }
 
-
     // =============================================================
     //  MAIN ROLL — ONLY 1 EVENT PER ROUND
     // =============================================================
@@ -60,7 +59,7 @@ public class EventManagerNet : NetworkBehaviour
 
         // 1) Check special TaxAudit event
         if (TryInjectTaxAuditEvent())
-            return;  // ถ้ามี TaxAudit แล้ว จบรอบนี้เลย
+            return; // ถ้ามี TaxAudit → จบรอบทันที
 
         // 2) Normal event (ONLY 1 EVENT)
         int idx = GetRandomNonConflictEvent();
@@ -73,9 +72,8 @@ public class EventManagerNet : NetworkBehaviour
         Debug.Log($"[EventManagerNet] Rolled event: {string.Join(",", currentEventIndices)}");
     }
 
-
     // =============================================================
-    //  SPECIAL — TAX AUDIT EVENT (ตรวจภาษี)
+    //  SPECIAL — TAX AUDIT EVENT (หักเงินทันที)
     // =============================================================
 
     private bool TryInjectTaxAuditEvent()
@@ -85,7 +83,7 @@ public class EventManagerNet : NetworkBehaviour
 
         var cfg = allEvents[taxIdx];
 
-        // ต้องเป็นรอบสุดท้าย (หรือรอบที่กำหนดใน Inspector)
+        // ต้องเป็นรอบสุดท้าย
         if (cfg.onlyFinalRound)
         {
             if (Timer.Instance == null) return false;
@@ -100,32 +98,23 @@ public class EventManagerNet : NetworkBehaviour
         if (UnityEngine.Random.value > 0.5f)
             return false;
 
-        // ผ่านทุกเงื่อนไข → ใช้อีเว้นนี้
+        // ✅ ผ่านทุกเงื่อนไข → ใช้อีเว้นนี้
         currentEventIndices.Add(taxIdx);
 
-        var debtPlayers = TaxManager.GetPlayersWithUnpaidTax();
-        foreach (var pid in debtPlayers)
+        // 💥 บังคับหักเงิน + ค่าปรับทันที (Server)
+        foreach (var kv in NetworkManager.Singleton.ConnectedClients)
         {
-            ForceOpenTaxUIClientRpc(new ClientRpcParams
-            {
-                Send = new ClientRpcSendParams
-                {
-                    TargetClientIds = new List<ulong>() { pid }
-                }
-            });
+            var netObj = kv.Value.PlayerObject;
+            if (!netObj) continue;
+
+            TaxManager.ForcePayWithPenalty(netObj.gameObject);
         }
+
+
+        Debug.Log("[TaxAudit] Force collected unpaid tax with penalty");
 
         return true;
     }
-
-
-    [ClientRpc]
-    private void ForceOpenTaxUIClientRpc(ClientRpcParams rpc = default)
-    {
-        var ui = FindObjectOfType<TaxUI>();
-        if (ui != null) ui.OpenForceMode();
-    }
-
 
     // =============================================================
     //  RANDOM EVENT PICKER (ONE EVENT ONLY)
@@ -148,7 +137,6 @@ public class EventManagerNet : NetworkBehaviour
 
         return candidate[UnityEngine.Random.Range(0, candidate.Count)];
     }
-
 
     // =============================================================
     //  MULTIPLIERS
@@ -207,7 +195,6 @@ public class EventManagerNet : NetworkBehaviour
             }
         }
     }
-
 
     // =============================================================
     //  PUBLIC GETTERS

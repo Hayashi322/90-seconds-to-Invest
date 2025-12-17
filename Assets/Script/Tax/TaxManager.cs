@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;          // ใช้ List<>
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -7,7 +7,16 @@ public class TaxManager : NetworkBehaviour
 {
     public static TaxManager Instance;
 
-    // Output ให้ UI อ่าน
+    // ============================================================
+    // Settings
+    // ============================================================
+    [Header("Penalty Settings")]
+    [SerializeField] private float taxPenaltyRate = 0.5f; // 50% penalty
+
+
+    // ============================================================
+    // Networked Output (UI อ่าน)
+    // ============================================================
     public NetworkVariable<double> unpaidTax =
         new(0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
@@ -15,18 +24,22 @@ public class TaxManager : NetworkBehaviour
         new(0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public NetworkVariable<double> effectiveRate =
-        new(0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server); // 0..1
+        new(0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+
+    // ============================================================
+    // Unity Lifecycle
+    // ============================================================
     private void Awake()
     {
-        if (Instance == null) Instance = this;
+        if (Instance == null)
+            Instance = this;
     }
 
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
 
-        // ตัวที่เป็น local player ให้เก็บเป็น Instance สำหรับ UI ฝั่งนั้นใช้
         if (IsOwner)
             Instance = this;
     }
@@ -37,155 +50,175 @@ public class TaxManager : NetworkBehaviour
             Instance = null;
     }
 
-    // ============================================================
-    //   ฟังก์ชันช่วยฝั่ง Server สำหรับ EventManagerNet
-    //   - เช็กว่ามี player ไหนค้างภาษีไหม
-    //   - ดึงรายชื่อ player ที่ค้างภาษี
-    // ============================================================
 
-    /// <summary>
-    /// ใช้บน Server: true ถ้ามีคนค้างภาษีอย่างน้อย 1 คน
-    /// </summary>
+    // ============================================================
+    // Helper (Server)
+    // ============================================================
     public static bool AnyPlayerHasUnpaidTax()
     {
-        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer)
+        if (!NetworkManager.Singleton.IsServer)
             return false;
 
         foreach (var kv in NetworkManager.Singleton.ConnectedClients)
         {
-            var playerObj = kv.Value.PlayerObject;
-            if (!playerObj) continue;
-
-            var tax = playerObj.GetComponent<TaxManager>();
-            if (tax == null) continue;
-
-            if (tax.unpaidTax.Value > 0.01f)
+            var tax = kv.Value.PlayerObject?.GetComponent<TaxManager>();
+            if (tax != null && tax.unpaidTax.Value > 0.01f)
                 return true;
         }
 
         return false;
     }
 
-    /// <summary>
-    /// ใช้บน Server: คืน List ของ clientId ที่ยังมีภาษีค้างชำระ
-    /// </summary>
     public static List<ulong> GetPlayersWithUnpaidTax()
     {
-        var result = new List<ulong>();
+        var list = new List<ulong>();
 
-        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer)
-            return result;
+        if (!NetworkManager.Singleton.IsServer)
+            return list;
 
         foreach (var kv in NetworkManager.Singleton.ConnectedClients)
         {
-            ulong clientId = kv.Key;
-            var playerObj = kv.Value.PlayerObject;
-            if (!playerObj) continue;
-
-            var tax = playerObj.GetComponent<TaxManager>();
-            if (tax == null) continue;
-
-            if (tax.unpaidTax.Value > 0.01f)
-                result.Add(clientId);
+            var tax = kv.Value.PlayerObject?.GetComponent<TaxManager>();
+            if (tax != null && tax.unpaidTax.Value > 0.01f)
+                list.Add(kv.Key);
         }
 
-        return result;
+        return list;
     }
 
-    // ============================================================
-    //   คำนวณภาษีแบบขั้นบันได
-    // ============================================================
 
-    // ภาษีแบบขั้นบันไดไทย (เวอร์ชันง่ายสำหรับเกม)
-    // ใช้ "เงินสดปัจจุบัน" เป็น proxy ของรายได้สุทธิรอบนี้ เพื่อเรียนรู้แนวคิดภาษี
+    // ============================================================
+    // Progressive Tax Calculation
+    // ============================================================
     private double CalcProgressiveTax(double baseAmount, out double effRate)
     {
-        double taxable = Math.Max(0f, baseAmount);
+        double taxable = Math.Max(0, baseAmount);
 
-        // เพดานรายได้ต่อชั้น (บาท)
         double[] caps =
         {
-            150_000f, 300_000f, 500_000f, 750_000f,
-            1_000_000f, 2_000_000f, 5_000_000f
+            150_000,
+            300_000,
+            500_000,
+            750_000,
+            1_000_000,
+            2_000_000,
+            5_000_000
         };
 
-        // อัตราภาษีต่อชั้น
         double[] rates =
         {
-            0.00f, 0.05f, 0.10f, 0.15f,
-            0.20f, 0.25f, 0.30f, 0.35f
+            0.00,
+            0.05,
+            0.10,
+            0.15,
+            0.20,
+            0.25,
+            0.30,
+            0.35
         };
 
-        double prevCap = 0f;
-        double tax = 0f;
+        double prevCap = 0;
+        double tax = 0;
 
-        for (int i = 0; i < caps.Length && taxable > 0f; i++)
+        for (int i = 0; i < caps.Length && taxable > 0; i++)
         {
-            double span = caps[i] - prevCap;       // ช่วงกว้างของชั้นนี้
-            double use = Math.Min(taxable, span);  // ส่วนที่ตกในชั้นนี้จริง
+            double span = caps[i] - prevCap;
+            double use = Math.Min(taxable, span);
+
             tax += use * rates[i];
             taxable -= use;
             prevCap = caps[i];
         }
 
-        // ส่วนที่เกิน 5M
-        if (taxable > 0f)
+        if (taxable > 0)
             tax += taxable * rates[rates.Length - 1];
 
-        effRate = (baseAmount <= 0f) ? 0f : (tax / baseAmount);
+        effRate = baseAmount <= 0 ? 0 : tax / baseAmount;
         return tax;
     }
 
-    // เรียกตอนเข้า Phase 3 เพื่อคำนวณบิลภาษีของผู้เล่นคนนั้น
+
+    // ============================================================
+    // Calculate Tax (Phase 3)
+    // ============================================================
     [ServerRpc(RequireOwnership = false)]
     public void CalculateTaxThisPhaseServerRpc(ServerRpcParams rpc = default)
     {
-        var clientId = rpc.Receive.SenderClientId;
-        if (!NetworkManager.Singleton.ConnectedClients.ContainsKey(clientId)) return;
-
-        var playerObj = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject;
-        if (!playerObj) return;
+        var playerObj = NetworkManager.Singleton
+            .ConnectedClients[rpc.Receive.SenderClientId]
+            .PlayerObject;
 
         var inv = playerObj.GetComponent<InventoryManager>();
-        var taxMgr = playerObj.GetComponent<TaxManager>();
-        if (!inv || !taxMgr) return;
+        var tax = playerObj.GetComponent<TaxManager>();
 
-        double baseAmount = Math.Max(0f, inv.cash.Value); // proxy รายได้
+        if (!inv || !tax)
+            return;
+
+        double baseAmount = Math.Max(0, inv.cash.Value);
+
         double eff;
+        double due = CalcProgressiveTax(baseAmount, out eff);
 
-        // คิดภาษีของรอบนี้
-        double currentDue = CalcProgressiveTax(baseAmount, out eff);
-
-        // ดึงยอดค้างเก่ามาบวกกับยอดใหม่ → กลายเป็นยอดค้างสะสม
-        double oldDue = taxMgr.unpaidTax.Value;
-        taxMgr.unpaidTax.Value = oldDue + currentDue;
-
-        // เก็บฐานที่ใช้คิดและ effective rate ของ "รอบล่าสุด"
-        taxMgr.taxableBase.Value = baseAmount;
-        taxMgr.effectiveRate.Value = eff;
+        tax.unpaidTax.Value += due;
+        tax.taxableBase.Value = baseAmount;
+        tax.effectiveRate.Value = eff;
     }
 
-    // กดชำระภาษี — อนุญาตเฉพาะ Phase 3
+
+    // ============================================================
+    // Pay Tax (Player Click)
+    // ============================================================
     [ServerRpc(RequireOwnership = false)]
     public void PayTaxServerRpc(ServerRpcParams rpc = default)
     {
-        var clientId = rpc.Receive.SenderClientId;
-        if (!NetworkManager.Singleton.ConnectedClients.ContainsKey(clientId)) return;
-
-        var playerObj = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject;
-        if (!playerObj) return;
+        var playerObj = NetworkManager.Singleton
+            .ConnectedClients[rpc.Receive.SenderClientId]
+            .PlayerObject;
 
         var inv = playerObj.GetComponent<InventoryManager>();
-        var taxMgr = playerObj.GetComponent<TaxManager>();
-        if (!inv || !taxMgr) return;
+        var tax = playerObj.GetComponent<TaxManager>();
 
-        // กันไม่ให้จ่ายนอก Phase 3
-        if (Timer.Instance == null || Timer.Instance.Phase != 3) return;
+        if (!inv || !tax)
+            return;
 
-        double due = taxMgr.unpaidTax.Value;
-        if (due <= 0f || inv.cash.Value < due) return;
+        double due = tax.unpaidTax.Value;
+        if (due <= 0)
+            return;
+
+        // ❗ เงินไม่พอ → ห้ามจ่าย
+        if (inv.cash.Value < due)
+            return;
 
         inv.cash.Value -= due;
-        taxMgr.unpaidTax.Value = 0f; // ชำระแล้ว เคลียร์หนี้
+        tax.unpaidTax.Value = 0;
+    }
+
+
+    // ============================================================
+    // Force Pay (Tax Audit Event)
+    // ============================================================
+    public static void ForcePayWithPenalty(GameObject playerObj)
+    {
+        var tax = playerObj.GetComponent<TaxManager>();
+        if (tax != null)
+            tax.ApplyPenalty(playerObj);
+    }
+
+    private void ApplyPenalty(GameObject playerObj)
+    {
+        var inv = playerObj.GetComponent<InventoryManager>();
+        if (!inv)
+            return;
+
+        double due = unpaidTax.Value;
+        if (due <= 0)
+            return;
+
+        double penalty = due * taxPenaltyRate;
+        double total = due + penalty;
+
+        // ❗ เงินไม่ติดลบ
+        inv.cash.Value = Math.Max(0, inv.cash.Value - total);
+        unpaidTax.Value = 0;
     }
 }

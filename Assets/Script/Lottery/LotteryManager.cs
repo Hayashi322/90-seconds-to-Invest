@@ -8,7 +8,7 @@ public class LotteryManager : NetworkBehaviour
     public static LotteryManager Instance { get; private set; }
 
     [Header("Config")]
-    [SerializeField] private int ticketPrice = 120;
+    [SerializeField] private int ticketPrice = 80;
     [SerializeField] private int ticketsPerGame = 12;
 
     [Header("Player UI")]
