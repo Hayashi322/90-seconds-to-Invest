@@ -23,7 +23,7 @@ public class casinoUI : MonoBehaviour
 
     [Header("Bet")]
     [SerializeField] private int cost = 10000;
-    private bool hightEven = true;
+    private bool hightEven = false;
     private bool hightOdd = false;
     private bool lowEven = false;
     private bool lowOdd = false;
@@ -31,18 +31,19 @@ public class casinoUI : MonoBehaviour
     private InventoryManager inv;
     private PlayerLawState lawState;
 
-    // ===== Cooldown System (แก้ใหม่ให้ไม่หยุดเมื่อ UI ปิด) =====
+    // ===== Cooldown System =====
     private bool isCooldown = false;
     [SerializeField] private float cooldownTime = 30f;
     [SerializeField] private TextMeshProUGUI cooldownText;
-    private float cooldownEndTime = -1f;   // เวลา Time.time ที่คูลดาวน์จะจบ
+    private float cooldownEndTime = -1f;
 
     private void OnEnable()
     {
         SetInteractable(false);
         StartCoroutine(BindLocalInventory());
 
-        // ข้อความตอนเข้า
+        UpdateRollButtonState(); // ตรวจสอบสถานะ Roll ปุ่ม
+
         if (enterMessageText)
         {
             StopAllCoroutines();
@@ -106,7 +107,6 @@ public class casinoUI : MonoBehaviour
         OnCashChanged(inv.cash.Value, inv.cash.Value);
         SetInteractable(true);
 
-        // แจ้งว่าผู้เล่นเข้าคาสิโน
         if (lawState != null && lawState.IsOwner)
         {
             lawState.EnterCasinoServerRpc();
@@ -136,19 +136,17 @@ public class casinoUI : MonoBehaviour
         if (amountInput && int.TryParse(amountInput.text, out var custom) && custom > 0)
             bet = custom;
 
-        if(inv.cash.Value >= bet)
-        {
-            isCooldown = true;
-            cooldownEndTime = Time.time + cooldownTime;
-        }
-        else { isCooldown = false; }
+        if (inv.cash.Value < bet) return; // ป้องกันเงินไม่พอ
+
+        isCooldown = true;
+        cooldownEndTime = Time.time + cooldownTime;
+
         inv.PlaceBetServerRpc(bet, ResolveChoice());
 
         if (lawState != null && lawState.IsOwner)
         {
             lawState.NotifyCasinoRollServerRpc();
         }
-
     }
 
     // =====================================
@@ -197,15 +195,35 @@ public class casinoUI : MonoBehaviour
             result.text = "คุณไม่ได้เงินตอบแทน";
     }
 
-    // Quick-select bet amount
-    public void pick10000() { cost = 100_000; if (amountInput) amountInput.text = cost.ToString(); }
-    public void pick50000() { cost = 500_000; if (amountInput) amountInput.text = cost.ToString(); }
-    public void pick100000() { cost = 1_000_000; if (amountInput) amountInput.text = cost.ToString(); }
+    // ================= Quick-select =================
+    public void pick10000() { cost = 10000; if (amountInput) amountInput.text = cost.ToString(); UpdateRollButtonState(); }
+    public void pick50000() { cost = 50000; if (amountInput) amountInput.text = cost.ToString(); UpdateRollButtonState(); }
+    public void pick100000() { cost = 100000; if (amountInput) amountInput.text = cost.ToString(); UpdateRollButtonState(); }
 
-    public void pickHight_Even() { hightEven = true; hightOdd = lowEven = lowOdd = false; }
-    public void pickHight_Odd() { hightOdd = true; hightEven = lowEven = lowOdd = false; }
-    public void pickLow_Even() { lowEven = true; hightEven = hightOdd = lowOdd = false; }
-    public void pickLow_Odd() { lowOdd = true; hightEven = hightOdd = lowEven = false; }
+    // ================= Bet button =================
+    public void pickHight_Even() { hightEven = true; hightOdd = lowEven = lowOdd = false; UpdateRollButtonState(); }
+    public void pickHight_Odd() { hightOdd = true; hightEven = lowEven = lowOdd = false; UpdateRollButtonState(); }
+    public void pickLow_Even() { lowEven = true; hightEven = hightOdd = lowOdd = false; UpdateRollButtonState(); }
+    public void pickLow_Odd() { lowOdd = true; hightEven = hightOdd = lowEven = false; UpdateRollButtonState(); }
+
+    // ================= Update Roll Button State =================
+    private void UpdateRollButtonState()
+    {
+        bool moneySelected = false;
+        if (amountInput && int.TryParse(amountInput.text, out var val) && val > 0)
+            moneySelected = true;
+
+        bool betSelected = hightEven || hightOdd || lowEven || lowOdd;
+
+        if (rollButton)
+            rollButton.interactable = moneySelected && betSelected;
+    }
+
+    // ================= Input field callback =================
+    public void OnAmountInputChanged(string value)
+    {
+        UpdateRollButtonState();
+    }
 
     private void Start()
     {
