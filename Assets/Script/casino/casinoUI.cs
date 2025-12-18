@@ -136,6 +136,12 @@ public class casinoUI : MonoBehaviour
         if (amountInput && int.TryParse(amountInput.text, out var custom) && custom > 0)
             bet = custom;
 
+        if(inv.cash.Value >= bet)
+        {
+            isCooldown = true;
+            cooldownEndTime = Time.time + cooldownTime;
+        }
+        else { isCooldown = false; }
         inv.PlaceBetServerRpc(bet, ResolveChoice());
 
         if (lawState != null && lawState.IsOwner)
@@ -143,9 +149,6 @@ public class casinoUI : MonoBehaviour
             lawState.NotifyCasinoRollServerRpc();
         }
 
-        // เริ่มคูลดาวน์ด้วยเวลาแน่นอน
-        isCooldown = true;
-        cooldownEndTime = Time.time + cooldownTime;
     }
 
     // =====================================
